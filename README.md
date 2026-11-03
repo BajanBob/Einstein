@@ -32,6 +32,12 @@ waveforms.
 IC-9100 / IC-7300 / IC-7610 / IC-705 / IC-905, FT-991A / FT-710 / FTdx10, FTM-500D /
 FTM-300D, TS-590SG / TS-890S and most 2020-era HF/VHF rigs, via `rigctld`.
 
+
+## Platforms & downloads (release v1.0.0)
+- **Android** `Einstein.apk` · **iOS** `Einstein-iPhone-unsigned.ipa` (sideload) · **Windows** `.exe`
+- **Linux (PC)** x64 AppImage + deb · **Raspberry Pi** arm64 + armv7l AppImage + deb
+- **SDR / RF tools** `einstein-sdr-rf-tools.tar.gz` — the `rf/` Python tools (HOMER TX/RX, ALE/Selcall/MMSI, measurements) to run on any Python 3 host (PC or Pi) with an SDR or soundcard. `pip install -r requirements.txt`.
+
 ## Build
 Pushes build Android/Windows/Linux and publish to the `v1.0.0` release. The RF waveforms,
 ALE/Selcall and the receiver research live in the companion Pigeon repo's `rf/` folder.
