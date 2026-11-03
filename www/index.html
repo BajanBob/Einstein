@@ -82,6 +82,7 @@
   <button data-tab="recorder">Recorder</button>
   <button data-tab="repeater">Repeater</button>
   <button data-tab="import">Import</button>
+  <button data-tab="email">Email</button>
   <button data-tab="tools">Tools</button>
   <button data-tab="settings">Settings</button>
 </div>
@@ -258,6 +259,45 @@
   </div>
 </section>
 
+<!-- ===== EMAIL / MODEM ===== -->
+<section id="t-email" style="display:none">
+  <div class="card">
+    <h2>Einstein Email &amp; Modem</h2>
+    <p class="small muted">Clear-text RF email / messaging over an SSB rig, carried by the built-in
+      <b>Einstein Modem</b> (adaptive OFDM). Compose here; the waveform is generated and decoded by the
+      <code>rf/</code> tools (<code>einstein_modem.py</code> + <code>einstein_email.py</code>) on the SDR/soundcard host.</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <label style="flex:0">Tier</label>
+      <select id="em-tier" style="flex:1;min-width:140px">
+        <option value="STANDARD">Standard (free · limited)</option>
+        <option value="PRO">Einstein Pro (ultra-high-speed)</option>
+      </select>
+    </div>
+    <div id="em-tierinfo" class="stat" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h2>Compose message</h2>
+    <div class="grid2">
+      <div><label>To (callsign)</label><input id="em-to" type="text" placeholder="KV4FZ" autocapitalize="characters"></div>
+      <div><label>From (callsign)</label><input id="em-from" type="text" placeholder="8P6NH" autocapitalize="characters"></div>
+    </div>
+    <label>Subject</label><input id="em-subj" type="text" placeholder="Field report">
+    <label>Message (clear text only — no encryption on RF)</label>
+    <textarea id="em-body" rows="4" placeholder="All stations: Einstein Email over HF is operational. 73."></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn go sm" id="em-build">Prepare for transmit</button>
+      <button class="btn sm" id="em-copy">Copy TX command</button></div>
+    <div id="em-out" class="stat" style="margin-top:10px;display:none"></div>
+  </div>
+  <div class="card">
+    <h2>How it sends</h2>
+    <p class="small muted">Einstein Email compresses (zlib, reversible — not a cipher), splits the message into
+      CRC-protected blocks, and runs a selective <b>ARQ</b>: the receiver asks only for the blocks that failed, so
+      traffic gets through fading that would wipe a single pass. Pro lifts the airtime governor and uses 16-QAM over
+      ~2.4&nbsp;kHz for ~5× the throughput of Standard.</p>
+    <p class="note">Full spec, measured FER/throughput and the recommended innovations: <code>rf/MODEM.md</code>.</p>
+  </div>
+</section>
+
 <!-- ===== SETTINGS ===== -->
 <section id="t-settings" style="display:none">
   <div class="card">
@@ -372,9 +412,50 @@ fillSel($('#flt-band'),BANDS,'All bands'); fillSel($('#flt-mode'),MODES,'All mod
 
 // ---------- tabs ----------
 $$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['dash','new','log','analyzer','recorder','repeater','import','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
+  ['dash','new','log','analyzer','recorder','repeater','import','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
   if(b.dataset.tab==='dash') renderDash(); if(b.dataset.tab==='log') renderLog(); if(b.dataset.tab==='tools') renderTools();
+  if(b.dataset.tab==='email') renderEmail();
   if(b.dataset.tab!=='analyzer' && anRun) stopAnalyzer(); if(b.dataset.tab!=='repeater' && rpRun) stopRepeater(); });
+
+// ---------- Einstein Email / Modem ----------
+const EM_TIERS = {
+  STANDARD: {name:'Standard (free)', bw:'~1000 Hz', mod:'QPSK', bps:'≈0.56 kbps',
+    gov:'30 s/over, 120 s per 10 min', note:'Bandwidth- and airtime-limited free tier.'},
+  PRO: {name:'Einstein Pro', bw:'~2400 Hz (HF) / wideband (VHF FM)', mod:'16-QAM', bps:'≈2.7 kbps',
+    gov:'unlimited airtime', note:'Ultra-high-speed, governor removed. Adaptive bit-loading + ARQ.'}
+};
+function renderEmail(){
+  const t = $('#em-to'), f=$('#em-from'); if(!f.value) f.value=(localStorage.getItem('my-call')||'');
+  emTierInfo();
+}
+function emTierInfo(){
+  const k=$('#em-tier').value, T=EM_TIERS[k];
+  $('#em-tierinfo').innerHTML = `<b>${T.name}</b><br>Bandwidth ${T.bw} · ${T.mod} · ${T.bps}<br>`+
+    `Airtime: ${T.gov}<br><span class="muted">${T.note}</span>`;
+}
+function emBuild(){
+  const to=$('#em-to').value.trim().toUpperCase(), fr=$('#em-from').value.trim().toUpperCase();
+  const subj=$('#em-subj').value.trim(), body=$('#em-body').value;
+  if(!to||!fr||!body){ $('#em-out').style.display=''; $('#em-out').innerHTML='<b>Fill To, From and a message.</b>'; return; }
+  const tier=$('#em-tier').value;
+  const cmd = `python3 -c "import einstein_email as e; `+
+    `blob=e.build_message('${fr}','${to}',${JSON.stringify(subj)},${JSON.stringify(body)}); `+
+    `import einstein_modem as m; y,meta=m.modulate(blob,'${tier}'); `+
+    `print('blob',len(blob),'bytes; transmit via soundcard at Fs=8000')"`;
+  window._emCmd = cmd;
+  const bytes = new Blob([body]).size;
+  $('#em-out').style.display='';
+  $('#em-out').innerHTML = `<b>Ready — ${EM_TIERS[tier].name}</b><br>`+
+    `${to} ← ${fr} · "${subj||'(no subject)'}" · ${bytes} B body<br>`+
+    `<span class="muted">Clear text, zlib-compressed, CRC + ARQ. Run on the SDR/soundcard host:</span><br>`+
+    `<code style="font-size:11px;word-break:break-all">${cmd}</code>`;
+}
+function emCopy(){ if(window._emCmd){ (navigator.clipboard?.writeText(window._emCmd)); const o=$('#em-copy'); o.textContent='Copied'; setTimeout(()=>o.textContent='Copy TX command',1200);} }
+document.addEventListener('DOMContentLoaded',()=>{
+  const ti=$('#em-tier'); if(ti) ti.onchange=emTierInfo;
+  const b=$('#em-build'); if(b) b.onclick=emBuild;
+  const c=$('#em-copy'); if(c) c.onclick=emCopy;
+});
 
 // ---------- shared audio input ----------
 let audioCtx=null;

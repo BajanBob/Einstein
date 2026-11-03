@@ -150,8 +150,29 @@ the clock (GPSDO/OCXO). Sweet spot: one GPU + ONNX-to-Python on the station PC.
 5. **Interoperable MIL-STD-188-141 2G ALE** if you want to talk to real Barrett radios.
 6. **Stronger FEC**: FT8-style LDPC(174,91) + sum-product for a longer-frame mode.
 
+## 8a. Einstein Modem & Email (data layer) — see `rf/MODEM.md`
+- **Einstein Modem** (`rf/einstein_modem.py`): adaptive OFDM, 8 kHz / 1500 Hz audio,
+  128-pt IFFT (62.5 Hz spacing), pilot-aided LS channel estimate + zero-forcing
+  equaliser, Gray QPSK/16-QAM, conv r=1/2 K=7 soft-Viterbi FEC. Two tiers —
+  **Standard** (QPSK ~1 kHz, ≈0.56 kbps, airtime-governed) and **Einstein Pro**
+  (16-QAM ~2.4 kHz, ≈2.7 kbps, unlimited).
+- **Measured** (50 trials/pt): ~10% FER at **2 dB** (Standard, AWGN) / **10 dB** (Pro,
+  AWGN). Under CCIR moderate HF fading both show an error floor (Std ~0.5, Pro ~0.2 at
+  14 dB) — honest first-cut limitation; **ARQ** carries traffic through it. Roadmap
+  fixes: time/freq interleaving, per-subcarrier bit-loading, sequence-model equaliser.
+- **Einstein Email** (`rf/einstein_email.py`): compose → zlib (reversible, clear-text,
+  not a cipher) → CRC-16 block framing → selective **ARQ** (recovered a full message
+  through 30% frame loss in 5 rounds). Callsign/Selcall addressing.
+- **Recommended innovations** (full list in MODEM.md): adaptive bit-loading, sequence-
+  model neural equaliser (the AI tribute), LDPC/fountain codes, cross-layer link
+  adaptation using ALE LQA + duct/ocean-scatter prediction, dynamic bandwidth,
+  templated-dictionary compression, transparent airtime governor.
+- **Scope:** a runnable OFDM prototype with measured sim numbers — **not** VARA-
+  interoperable (VARA is proprietary) and **not** a Winlink drop-in.
+
 ## 9. Legal
-Amateur radio forbids **encryption** — all RF (PigeonFSK/HOMER/ALE/Selcall) is **clear
-text**. Pigeon's internet sharing is AES-256 and never touches RF. Transmit only where
-licensed; identify; respect band plans; a crossband repeater may need an automatic-
-station authorisation.
+Amateur radio forbids **encryption** — all RF (PigeonFSK/HOMER/ALE/Selcall and the
+Einstein Modem/Email) is **clear text**; zlib compression is reversible and key-less
+(permitted, not a cipher). Pigeon's internet sharing is AES-256 and never touches RF.
+Transmit only where licensed; identify; respect band plans; a crossband repeater may
+need an automatic-station authorisation.

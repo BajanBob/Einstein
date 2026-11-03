@@ -18,6 +18,12 @@ what is software vs what needs radio hardware.
   dashboard, ADIF/CSV export.
 - **Tools** — **MMSI** decoder (ITU-R M.585), **Selcall** tone tables (CCIR/ZVEI1/EEA +
   aeronautical SELCAL), and the international **ALE** channel plan (HFLINK HFN).
+- **Einstein Email & Modem** — clear-text RF email / messaging over SSB, carried by the
+  built-in **Einstein Modem** (adaptive OFDM). Two tiers: **Standard** (free, QPSK ~1 kHz,
+  airtime-governed) and **Einstein Pro** (ultra-high-speed, 16-QAM ~2.4 kHz, unlocked).
+  Compressed, CRC-protected, selective-ARQ. Compose in-app; modulate/decode with the
+  `rf/` tools. Full spec, measured numbers and recommended innovations in `rf/MODEM.md`.
+  *Not VARA-compatible, not a Winlink drop-in — an open, honest, Einstein-native modem.*
 
 ## The hybrid vision (roadmap)
 See `ROADMAP.md`. The headline: a dual-band **VHF/HF** station assistant that
