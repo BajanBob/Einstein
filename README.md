@@ -18,6 +18,14 @@ what is software vs what needs radio hardware.
   dashboard, ADIF/CSV export.
 - **Tools** — **MMSI** decoder (ITU-R M.585), **Selcall** tone tables (CCIR/ZVEI1/EEA +
   aeronautical SELCAL), and the international **ALE** channel plan (HFLINK HFN).
+- **SSP — Sea Scatter Propagation** — AI-assisted over-water 2 m/70 cm path analysis.
+  Pick two grid squares; Einstein aggregates the marine-weather variables (SST, air temp,
+  humidity, pressure, wind) along the great-circle path from live data, computes
+  evaporation-duct height, duct continuity and sea-Bragg scatter, and predicts a
+  workable-path likelihood by distance band (≤1000/≤3000/≤6000 mi / beyond). Results go
+  to an on-screen pop-up, an optional email, or WhatsApp. **Honest + physics-capped:**
+  long bands read near zero because 2 m/70 cm do not propagate that far over sea. Logged
+  as a mode. Spec: `rf/SSP.md`.
 - **Einstein Email & Modem** — clear-text RF email / messaging over SSB, carried by the
   built-in **Einstein Modem** (adaptive OFDM). Two tiers: **Standard** (free, QPSK ~1 kHz,
   airtime-governed) and **Einstein Pro** (ultra-high-speed, 16-QAM ~2.4 kHz, unlocked).

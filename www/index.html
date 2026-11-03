@@ -82,6 +82,7 @@
   <button data-tab="recorder">Recorder</button>
   <button data-tab="repeater">Repeater</button>
   <button data-tab="import">Import</button>
+  <button data-tab="ssp">SSP</button>
   <button data-tab="email">Email</button>
   <button data-tab="tools">Tools</button>
   <button data-tab="settings">Settings</button>
@@ -259,6 +260,56 @@
   </div>
 </section>
 
+<!-- ===== SSP — SEA SCATTER PROPAGATION ===== -->
+<section id="t-ssp" style="display:none">
+  <div class="card">
+    <h2>SSP — Sea Scatter Propagation analysis (2 m / 70 cm)</h2>
+    <p class="small muted">AI-assisted over-water VHF/UHF path analysis. Aggregates the marine-weather
+      variables that drive ducting and sea scatter along the great-circle path between two grid squares,
+      and predicts a workable-path likelihood by distance band. <b>Honest by design:</b> 2 m/70 cm do not
+      propagate thousands of miles by these mechanisms — long bands are capped at the documented physical
+      ceiling and reported near zero.</p>
+    <div class="grid2">
+      <div><label>From grid</label><input id="ssp-a" type="text" placeholder="FK52" autocapitalize="characters"></div>
+      <div><label>To grid</label><input id="ssp-b" type="text" placeholder="GK03" autocapitalize="characters"></div>
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px">
+      <div style="flex:1;min-width:120px"><label>Band</label>
+        <select id="ssp-freq"><option value="144.3">2 m (144 MHz)</option><option value="432">70 cm (432 MHz)</option></select></div>
+      <div style="flex:1;min-width:120px"><label>Target distance</label>
+        <select id="ssp-band"><option value="auto">Auto (from grids)</option><option value="1609">≤1000 mi</option><option value="4828">≤3000 mi</option><option value="9656">≤6000 mi</option><option value="20000">&gt;6000 mi</option></select></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn go sm" id="ssp-run">Run analysis</button>
+      <span class="small muted" id="ssp-status"></span></div>
+  </div>
+  <div class="card" id="ssp-wxcard" style="display:none">
+    <h2>Marine weather along path</h2>
+    <p class="small muted">Fetched live per waypoint (Open-Meteo marine, no key). If offline, enter a representative set and it will be applied to the whole path.</p>
+    <div class="grid2">
+      <div><label>SST (°C)</label><input id="wx-sst" type="number" value="28"></div>
+      <div><label>Air temp (°C)</label><input id="wx-ta" type="number" value="30"></div>
+      <div><label>Humidity (%)</label><input id="wx-rh" type="number" value="78"></div>
+      <div><label>Pressure (hPa)</label><input id="wx-p" type="number" value="1016"></div>
+      <div><label>Wind (m/s)</label><input id="wx-u" type="number" value="5"></div>
+    </div>
+    <p class="note" id="ssp-wxnote"></p>
+  </div>
+  <div class="card" id="ssp-rescard" style="display:none">
+    <h2>Result</h2>
+    <div id="ssp-res" class="stat"></div>
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+      <label style="flex:0">Send to</label>
+      <input id="ssp-email" type="email" placeholder="email (optional)" style="flex:1;min-width:120px">
+      <input id="ssp-wa" type="text" placeholder="WhatsApp number (optional)" style="flex:1;min-width:120px">
+    </div>
+    <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+      <button class="btn sm" id="ssp-popup">Pop-up</button>
+      <button class="btn sm" id="ssp-mail">Email</button>
+      <button class="btn sm" id="ssp-whats">WhatsApp</button>
+    </div>
+  </div>
+</section>
+
 <!-- ===== EMAIL / MODEM ===== -->
 <section id="t-email" style="display:none">
   <div class="card">
@@ -333,7 +384,7 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const BANDS=["6m (50 MHz)","2m (144 MHz)","1.25m (222 MHz)","70cm (432 MHz)","33cm (902 MHz)","23cm (1296 MHz)","HF"];
 const BANDHZ={"6m (50 MHz)":"50","2m (144 MHz)":"144","1.25m (222 MHz)":"222","70cm (432 MHz)":"432","33cm (902 MHz)":"902","23cm (1296 MHz)":"1296","HF":"14"};
-const MODES=["FT8","FT4","WSPR","FST4W","MSK144","Q65","JT65","EME (2m)","EME (70cm)","Meteor scatter","Troposcatter","Ocean scatter (exp)","SSB","CW","Other"];
+const MODES=["FT8","FT4","WSPR","FST4W","MSK144","Q65","JT65","EME (2m)","EME (70cm)","Meteor scatter","Troposcatter","Ocean scatter (exp)","SSP — Sea Scatter (exp)","SSB","CW","Other"];
 const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const LS={ get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} };
 
@@ -412,10 +463,122 @@ fillSel($('#flt-band'),BANDS,'All bands'); fillSel($('#flt-mode'),MODES,'All mod
 
 // ---------- tabs ----------
 $$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['dash','new','log','analyzer','recorder','repeater','import','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
+  ['dash','new','log','analyzer','recorder','repeater','import','ssp','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
   if(b.dataset.tab==='dash') renderDash(); if(b.dataset.tab==='log') renderLog(); if(b.dataset.tab==='tools') renderTools();
-  if(b.dataset.tab==='email') renderEmail();
+  if(b.dataset.tab==='email') renderEmail(); if(b.dataset.tab==='ssp') renderSSP();
   if(b.dataset.tab!=='analyzer' && anRun) stopAnalyzer(); if(b.dataset.tab!=='repeater' && rpRun) stopRepeater(); });
+
+// ---------- SSP — Sea Scatter Propagation (on-device physics) ----------
+const SSP = (()=>{
+  const C=299792458, G=9.81, R=6371, CEIL_2M=4000, CEIL_70=3000;
+  const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+  function grid2ll(g){ g=(g||'').trim(); if(g.length<4) throw 'grid needs ≥4 chars (e.g. FK52)';
+    let lon=(g.charCodeAt(0)-65)*20-180, lat=(g.charCodeAt(1)-65)*10-90;
+    lon+=(+g[2])*2; lat+=(+g[3])*1;
+    if(g.length>=6){ lon+=(g.toUpperCase().charCodeAt(4)-65)*(2/24)+(1/24); lat+=(g.toUpperCase().charCodeAt(5)-65)*(1/24)+(0.5/24);} else {lon+=1;lat+=0.5;}
+    return [lat,lon]; }
+  function gc(la1,lo1,la2,lo2){ const p1=rad(la1),p2=rad(la2),dl=rad(lo2-lo1),dp=p2-p1;
+    const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    const d=2*R*Math.asin(Math.min(1,Math.sqrt(a)));
+    const y=Math.sin(dl)*Math.cos(p2), x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+    return [d,(deg(Math.atan2(y,x))+360)%360]; }
+  function waypoints(la1,lo1,la2,lo2,n){ const p1=rad(la1),l1=rad(lo1),p2=rad(la2),l2=rad(lo2);
+    const d=2*Math.asin(Math.sqrt(Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin((l2-l1)/2)**2));
+    const out=[]; for(let i=0;i<=n;i++){ const f=i/n; if(d===0){out.push([la1,lo1]);continue;}
+      const A=Math.sin((1-f)*d)/Math.sin(d), B=Math.sin(f*d)/Math.sin(d);
+      const x=A*Math.cos(p1)*Math.cos(l1)+B*Math.cos(p2)*Math.cos(l2);
+      const y=A*Math.cos(p1)*Math.sin(l1)+B*Math.cos(p2)*Math.sin(l2);
+      const z=A*Math.sin(p1)+B*Math.sin(p2);
+      out.push([deg(Math.atan2(z,Math.hypot(x,y))),deg(Math.atan2(y,x))]); } return out; }
+  const esat=T=>6.1121*Math.exp((18.678-T/234.5)*(T/(257.14+T)));
+  const spechum=(e,P)=>621.97*e/(P-0.378*e);
+  function edh(sst,ta,rh,P){ const z0=1.5e-4, zr=10; let mMin=1e9, zMin=0, m0=null;
+    const eS=0.98*esat(sst), qS=spechum(eS,P), eR=(rh/100)*esat(ta), qR=spechum(eR,P);
+    for(let k=0;k<120;k++){ const z=0.1*Math.pow(60/0.1,k/119);
+      let fr=Math.log(z/z0)/Math.log(zr/z0); fr=Math.max(0,Math.min(1,fr));
+      const T=sst+(ta-sst)*fr, q=qS+(qR-qS)*fr, e=q*P/(621.97+0.378*q), Tk=T+273.15;
+      const N=77.6*P/Tk+3.73e5*e/(Tk*Tk), M=N+0.157*z; if(k===0)m0=M;
+      if(M<mMin){mMin=M;zMin=z;} }
+    return {edh:zMin, deficit:Math.max(0,m0-mMin), trapped:(zMin>0.11 && m0-mMin>0)}; }
+  const COEF={bias:-3.4,edh_min:0.12,trapped:3.1,deficit:0.03,inv:0.18,sst:0.05,fpen:-0.65,dpen:-0.0011};
+  const logit=x=>1/(1+Math.exp(-x));
+  function predict(ga,gb,fMHz,pathWx,forceDist){
+    const [la,loa]=grid2ll(ga),[lb,lob]=grid2ll(gb); let [dist,brg]=gc(la,loa,lb,lob);
+    if(forceDist) dist=forceDist;
+    const E=pathWx.map(w=>edh(w.sst,w.ta,w.rh,w.P));
+    const edhMin=Math.min(...E.map(e=>e.edh)), trapFrac=E.filter(e=>e.trapped).length/E.length;
+    const defMean=E.reduce((s,e)=>s+e.deficit,0)/E.length;
+    const invMax=Math.max(...pathWx.map(w=>Math.max(0,w.ta-w.sst)));
+    const sstMean=pathWx.reduce((s,w)=>s+w.sst,0)/pathWx.length;
+    const z=COEF.bias+COEF.edh_min*edhMin+COEF.trapped*trapFrac+COEF.deficit*defMean
+            +COEF.inv*invMax+COEF.sst*(sstMean-20)+COEF.fpen*(fMHz>300?1:0)+COEF.dpen*dist;
+    let raw=logit(z); const ceil=fMHz<300?CEIL_2M:CEIL_70;
+    const prob=dist<=ceil?raw:raw*Math.exp(-(dist-ceil)/ceil);
+    const verdict=prob>0.6?'LIKELY':prob>0.3?'POSSIBLE':prob>0.08?'UNLIKELY':'NOT SUPPORTED';
+    const mi=dist/1.609, band=mi<=1000?'≤1000 mi':mi<=3000?'≤3000 mi':mi<=6000?'≤6000 mi':'>6000 mi';
+    const notes=[];
+    if(dist>ceil) notes.push(`path ${dist.toFixed(0)} km exceeds the documented ${fMHz<300?'2 m':'70 cm'} over-sea ceiling (~${ceil} km): modelled probability is near zero, shown for completeness — not a realistic opening.`);
+    if(trapFrac<0.6) notes.push('duct is not continuous along the whole path (weakest-link grids break it).');
+    if(edhMin>=15) notes.push('strong evaporation duct present along the path.');
+    return {ga,gb,la,loa,lb,lob,dist:+dist.toFixed(1),mi:+mi.toFixed(0),brg:+brg.toFixed(1),band,fMHz,
+            prob:+prob.toFixed(3),verdict,edhMin:+edhMin.toFixed(1),trapFrac,notes};
+  }
+  return {grid2ll,gc,waypoints,predict};
+})();
+
+let _sspResult=null;
+function renderSSP(){ const a=$('#ssp-a'); if(a&&!a.value){} }
+async function fetchMarine(lat,lon){
+  // Open-Meteo marine + forecast (no key). Returns one representative wx dict.
+  try{
+    const m=await fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(2)}&longitude=${lon.toFixed(2)}&current=sea_surface_temperature`).then(r=>r.json());
+    const w=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(2)}&longitude=${lon.toFixed(2)}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m`).then(r=>r.json());
+    const sst=m?.current?.sea_surface_temperature, ta=w?.current?.temperature_2m;
+    if(sst==null||ta==null) return null;
+    return {sst, ta, rh:w.current.relative_humidity_2m, P:w.current.surface_pressure, U:(w.current.wind_speed_10m||0)/3.6};
+  }catch(e){ return null; }
+}
+async function sspRun(){
+  const ga=$('#ssp-a').value, gb=$('#ssp-b').value, f=+$('#ssp-freq').value;
+  const st=$('#ssp-status'); $('#ssp-wxcard').style.display='';
+  let ll1,ll2; try{ ll1=SSP.grid2ll(ga); ll2=SSP.grid2ll(gb);}catch(e){ st.textContent='⚠ '+e; return; }
+  st.textContent='Fetching marine weather along path…';
+  const wpt=SSP.waypoints(ll1[0],ll1[1],ll2[0],ll2[1],10);
+  let path=[], live=0;
+  for(const [la,lo] of wpt){ const w=await fetchMarine(la,lo); if(w){path.push(w);live++;} }
+  let src;
+  if(path.length>=Math.ceil(wpt.length*0.5)){ src=`live Open-Meteo at ${live}/${wpt.length} waypoints`; }
+  else { const man={sst:+$('#wx-sst').value,ta:+$('#wx-ta').value,rh:+$('#wx-rh').value,P:+$('#wx-p').value,U:+$('#wx-u').value};
+    path=wpt.map(()=>man); src='manual values (live fetch unavailable offline)'; }
+  $('#ssp-wxnote').textContent='Weather source: '+src+'.';
+  const bandSel=$('#ssp-band').value; const force=bandSel==='auto'?null:+bandSel;
+  const r=SSP.predict(ga,gb,f,path,force); _sspResult=r;
+  st.textContent='';
+  $('#ssp-rescard').style.display='';
+  const col=r.verdict==='LIKELY'?'#28c76f':r.verdict==='POSSIBLE'?'#ff9f43':r.verdict==='UNLIKELY'?'#ff7a45':'#ea5455';
+  $('#ssp-res').innerHTML=
+    `<div style="font-size:15px"><b>${r.ga} → ${r.gb}</b> · ${r.dist} km (${r.mi} mi) · brg ${r.brg}° · ${r.band}</div>`+
+    `<div style="margin:6px 0"><b>${f} MHz</b> · P(workable sea-scatter/duct path) = `+
+    `<b style="color:${col}">${(r.prob*100).toFixed(0)}% — ${r.verdict}</b></div>`+
+    `<div class="muted">EDH (weakest grid) ${r.edhMin} m · duct continuous over ${(r.trapFrac*100).toFixed(0)}% of path</div>`+
+    (r.notes.length?('<ul style="margin:8px 0 0;padding-left:16px">'+r.notes.map(n=>`<li>${n}</li>`).join('')+'</ul>'):'');
+}
+function sspText(){ const r=_sspResult; if(!r) return '';
+  return `Einstein SSP — Sea Scatter Propagation analysis\n`+
+    `${r.ga} -> ${r.gb} | ${r.dist} km (${r.mi} mi) | bearing ${r.brg} deg | ${r.band}\n`+
+    `${r.fMHz} MHz: P(workable) = ${(r.prob*100).toFixed(0)}% [${r.verdict}]\n`+
+    `Evaporation duct (weakest grid) ${r.edhMin} m; duct continuous ${(r.trapFrac*100).toFixed(0)}% of path.\n`+
+    (r.notes.length?('Notes:\n- '+r.notes.join('\n- ')+'\n'):'')+
+    `(AI-assisted, honest physics-capped estimate — not a guarantee of an opening.)`;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const run=$('#ssp-run'); if(run) run.onclick=sspRun;
+  const pu=$('#ssp-popup'); if(pu) pu.onclick=()=>alert(sspText());
+  const ml=$('#ssp-mail'); if(ml) ml.onclick=()=>{ const to=$('#ssp-email').value.trim();
+    location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent('Einstein SSP analysis '+(_sspResult?_sspResult.ga+'→'+_sspResult.gb:''))}&body=${encodeURIComponent(sspText())}`; };
+  const wa=$('#ssp-whats'); if(wa) wa.onclick=()=>{ const num=$('#ssp-wa').value.replace(/[^0-9]/g,'');
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(sspText())}`,'_blank'); };
+});
 
 // ---------- Einstein Email / Modem ----------
 const EM_TIERS = {

@@ -170,6 +170,19 @@ the clock (GPSDO/OCXO). Sweet spot: one GPU + ONNX-to-Python on the station PC.
 - **Scope:** a runnable OFDM prototype with measured sim numbers — **not** VARA-
   interoperable (VARA is proprietary) and **not** a Winlink drop-in.
 
+## 8b. SSP — Sea Scatter Propagation analysis & mode — see `rf/SSP.md`
+- **`rf/ssp_predict.py`** + in-app **SSP tab**: over-water 2 m/70 cm path analysis between
+  two Maidenhead grids. Aggregates marine weather (SST, air temp, RH, pressure, wind) at
+  ~11 waypoints along the great-circle path (live Open-Meteo, no key; manual fallback),
+  computes evaporation-duct height M(z), surface-inversion strength, duct-continuity
+  fraction (weakest-link) and sea-Bragg Doppler, and scores P(workable) with a transparent
+  **logistic model** over those features + a hard **physical ceiling** (2 m ≈ 4000 km,
+  70 cm ≈ 3000 km).
+- **Honest by construction:** ≤1000 mi warm-sea ducting scores realistically (e.g. 700 km
+  2 m ≈ 71% LIKELY); ≤3000 mi is the extreme edge; ≤6000 mi and beyond return NOT SUPPORTED
+  (shown for completeness). Output: on-screen pop-up, optional email, or WhatsApp.
+- Logged as mode "SSP — Sea Scatter (exp)".
+
 ## 9. Legal
 Amateur radio forbids **encryption** — all RF (PigeonFSK/HOMER/ALE/Selcall and the
 Einstein Modem/Email) is **clear text**; zlib compression is reversible and key-less
