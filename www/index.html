@@ -321,7 +321,8 @@
       <label style="flex:0">Tier</label>
       <select id="em-tier" style="flex:1;min-width:140px">
         <option value="STANDARD">Standard (free · limited)</option>
-        <option value="PRO">Einstein Pro (ultra-high-speed)</option>
+        <option value="PRO">Einstein Pro — HF (~2.7 kbps)</option>
+        <option value="PRO_VHF">Einstein Pro — VHF/FM wideband (~9 kbps)</option>
       </select>
     </div>
     <div id="em-tierinfo" class="stat" style="margin-top:10px"></div>
@@ -584,8 +585,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 const EM_TIERS = {
   STANDARD: {name:'Standard (free)', bw:'~1000 Hz', mod:'QPSK', bps:'≈0.56 kbps',
     gov:'30 s/over, 120 s per 10 min', note:'Bandwidth- and airtime-limited free tier.'},
-  PRO: {name:'Einstein Pro', bw:'~2400 Hz (HF) / wideband (VHF FM)', mod:'16-QAM', bps:'≈2.7 kbps',
-    gov:'unlimited airtime', note:'Ultra-high-speed, governor removed. Adaptive bit-loading + ARQ.'}
+  PRO: {name:'Einstein Pro (HF)', bw:'~2400 Hz (SSB passband)', mod:'16-QAM', bps:'≈2.7 kbps',
+    gov:'unlimited airtime', note:'HF SSB is bandwidth-capped near 2.4 kHz. Governor removed, ARQ.'},
+  PRO_VHF: {name:'Einstein Pro — VHF/FM wideband', bw:'~6 kHz (FM audio) @ 16 kHz', mod:'64-QAM', bps:'≈9 kbps usable (≈14 kbps clean gross)',
+    gov:'unlimited airtime', note:'Needs a strong local VHF/FM link (~25+ dB SNR) for 64-QAM. Not for HF SSB.'}
 };
 function renderEmail(){
   const t = $('#em-to'), f=$('#em-from'); if(!f.value) f.value=(localStorage.getItem('my-call')||'');
