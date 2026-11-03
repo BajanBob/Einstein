@@ -43,8 +43,7 @@ estimated. Credit: **AI-assisted (Claude)** — the serving model version is not
 ### Pigeon repo (`github.com/BajanBob/Pigeon`) — the location-sharing app
 | File | Purpose |
 |---|---|
-| `www/index.html` | Pigeon app: compass, map, live location sharing, **two-way video call**, **the Door** (paired Pigeon Codes), stealth (PLUMAGE), ham-RF map layer. |
-| `www/stealth.js` | PLUMAGE steganography engine. |
+| `www/index.html` | Pigeon app: compass, map, live location sharing, **two-way video call**, **the Door** (paired Pigeon Codes), ham-RF map layer. |
 | `relay/worker.js` | Cloudflare Worker — signalling (get/put mailbox, **no KV list**), `/ice`, `/where`, `/rf` board, serves the app. |
 | `einstein/**` | Earlier in-Pigeon copy of Einstein (now has its own repo). |
 
