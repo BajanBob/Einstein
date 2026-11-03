@@ -8,7 +8,19 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0f14'/%3E%3Cg fill='none' stroke='%2366e0ff' stroke-width='3'%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9' transform='rotate(120 32 32)'/%3E%3C/g%3E%3C/svg%3E">
 <style>
   :root{ --bg:#070b10; --card:#0e151d; --line:#1d2a36; --fg:#e6eef6; --muted:#8299ad; --accent:#66e0ff; --accent2:#ffb648; --ok:#45d98a; --bad:#ff5d6c; --mono:ui-monospace,Menlo,Consolas,monospace; --body:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  :root[data-theme="light"]{ --bg:#eef3f7; --card:#fff; --line:#cfdae4; --fg:#0f1d29; --muted:#5a7084; }
+  /* ---- field faceplates ---- */
+  /* DAY: sunlight-readable, high-contrast */
+  :root[data-theme="day"]{ --bg:#eef2f5; --card:#ffffff; --line:#9fb1bf; --fg:#060d13; --muted:#33495a; --accent:#0b5fab; --accent2:#0a6b45; --ok:#0a7d2e; --bad:#ad0f17; }
+  :root[data-theme="day"] body{ font-weight:500; }
+  :root[data-theme="day"] .stat .v, :root[data-theme="day"] h1{ font-weight:700; }
+  /* NIGHT: NVG-safe red monochrome on black — preserves dark adaptation */
+  :root[data-theme="night"]{ --bg:#000000; --card:#0a0202; --line:#3a0e0e; --fg:#ff4b4b; --muted:#b23b3b; --accent:#ff5a5a; --accent2:#ff7a4a; --ok:#ff7a7a; --bad:#ff2020; }
+  :root[data-theme="night"] body{ filter:saturate(0.85); }
+  :root[data-theme="night"] canvas{ filter:brightness(0.85); }
+  :root[data-theme="day"] .stat{ background:#e9eff5; }
+  :root[data-theme="night"] .stat{ background:#0a0202; }
+  :root[data-theme="night"] .logo{ filter:grayscale(1) brightness(0.7) sepia(1) saturate(8) hue-rotate(-18deg); }
+  :root[data-theme="night"] .tbtn.on, :root[data-theme="night"] .tabs button.on{ color:var(--accent); border-color:var(--accent); }
   *{box-sizing:border-box} html,body{margin:0}
   body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding:0 0 40px}
   header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:10}
@@ -23,7 +35,11 @@
   h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
   label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
   input,select,textarea{width:100%;background:#0a1017;border:1px solid var(--line);border-radius:9px;color:var(--fg);padding:10px;font:14px var(--body)}
-  :root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#f3f7fb}
+  :root[data-theme="day"] input,:root[data-theme="day"] select,:root[data-theme="day"] textarea{background:#f3f7fb}
+  :root[data-theme="night"] input,:root[data-theme="night"] select,:root[data-theme="night"] textarea{background:#140303;color:var(--fg)}
+  .faceplate{display:flex;gap:4px}
+  .faceplate button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:6px 9px;font:600 12px var(--body);cursor:pointer}
+  .faceplate button.on{border-color:var(--accent);color:var(--accent)}
   textarea{min-height:90px;font:12px var(--mono);resize:vertical}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
@@ -51,7 +67,11 @@
 <header>
   <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0e151d"/><g fill="none" stroke="#66e0ff" stroke-width="3"><circle cx="32" cy="32" r="6"/><ellipse cx="32" cy="32" rx="22" ry="9"/><ellipse cx="32" cy="32" rx="22" ry="9" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="22" ry="9" transform="rotate(120 32 32)"/></g></svg>
   <div><h1>Einstein</h1><p class="sub">Weak-signal station log &amp; analysis — in tribute to Albert</p></div>
-  <div style="margin-left:auto"><button class="btn sm" id="theme-btn">◐</button></div>
+  <div style="margin-left:auto" class="faceplate" id="faceplate">
+    <button data-face="day" title="Sunlight-readable">☀ Day</button>
+    <button data-face="dark" class="on" title="Standard">◐ Dark</button>
+    <button data-face="night" title="NVG-safe red">🌙 Night</button>
+  </div>
 </header>
 
 <div class="tabs" id="tabs">
@@ -372,14 +392,17 @@ async function startAnalyzer(){ if(anRun) return;
     const nyq=audioCtx.sampleRate/2, maxHz=6000, maxBin=Math.min(bins, Math.round(maxHz/nyq*bins));
     anRun=true; $('#an-state').textContent='running'; $('#an-start').classList.add('on');
     const draw=()=>{ if(!anRun) return; an.getByteFrequencyData(data);
-      sx.clearRect(0,0,spec.width,spec.height); sx.strokeStyle='#66e0ff'; sx.beginPath();
+      const acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#66e0ff';
+      const night=window.isNight;
+      sx.clearRect(0,0,spec.width,spec.height); sx.strokeStyle=acc; sx.beginPath();
       let peak=0,pk=0,sum=0; for(let i=0;i<maxBin;i++){ const v=data[i]; sum+=v; if(v>peak){peak=v;pk=i;}
         const x=i/maxBin*spec.width, y=spec.height-(v/255)*spec.height; i?sx.lineTo(x,y):sx.moveTo(x,y); }
       sx.stroke();
-      // waterfall scroll
+      // waterfall scroll — red palette in Night (NVG-safe), blue→cyan otherwise
       const img=fx.getImageData(0,0,fall.width,fall.height); fx.putImageData(img,0,1);
       for(let x=0;x<fall.width;x++){ const i=Math.floor(x/fall.width*maxBin); const v=data[i];
-        fx.fillStyle=`hsl(${200-v},90%,${Math.min(60,v/3)}%)`; fx.fillRect(x,0,1,1); }
+        fx.fillStyle = night ? `hsl(0,95%,${Math.min(55,v/4)}%)` : `hsl(${200-v},90%,${Math.min(60,v/3)}%)`;
+        fx.fillRect(x,0,1,1); }
       const peakHz=Math.round(pk/bins*nyq); const mean=sum/maxBin;
       const snr=peak>0?Math.round(20*Math.log10((peak+1)/(mean+1))):0;
       $('#an-peak').textContent=peakHz+' Hz'; $('#an-lvl').textContent=Math.round(peak/255*100)+'%'; $('#an-snr').textContent=snr+' dB';
@@ -472,9 +495,10 @@ function renderTools(){
 }
 
 // ---------- theme ----------
-$('#theme-btn').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const n=cur==='light'?'':'light';
-  if(n) document.documentElement.setAttribute('data-theme',n); else document.documentElement.removeAttribute('data-theme'); LS.set('e-theme',n); };
-if(LS.get('e-theme','')) document.documentElement.setAttribute('data-theme','light');
+function setFace(f){ if(f==='dark') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',f);
+  $$('#faceplate button').forEach(b=>b.classList.toggle('on',b.dataset.face===f)); LS.set('e-theme',f); window.isNight=(f==='night'); }
+$$('#faceplate button').forEach(b=>b.onclick=()=>setFace(b.dataset.face));
+setFace(LS.get('e-theme','dark')||'dark');
 
 // ---------- settings ----------
 $('#my-call').value=LS.get('e-mycall',''); $('#my-grid').value=LS.get('e-mygrid','');
