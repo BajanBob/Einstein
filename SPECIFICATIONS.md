@@ -183,9 +183,22 @@ the clock (GPSDO/OCXO). Sweet spot: one GPU + ONNX-to-Python on the station PC.
   (shown for completeness). Output: on-screen pop-up, optional email, or WhatsApp.
 - Logged as mode "SSP — Sea Scatter (exp)".
 
+## 8c. Cognitive engine + Einstein Beacon — see `rf/COGNITIVE.md`
+- **`rf/einstein_cognitive.py`** + in-app **AI tab**: ingests heard-station/beacon spots,
+  classifies each path (F2 / Sporadic-E / Tropo-duct / **TEP** / tropo-scatter / meteor /
+  ground-wave) with confidence + evidence, maps open compass sectors, and performs
+  link adaptation (throttle up/down across STANDARD→PRO→PRO_VHF by measured SNR) with
+  redundancy/failover on SNR-trend. Transparent heuristic grounded in propagation physics.
+- **`rf/einstein_beacon.py`**: Einstein Beacon (`EB1`) hailing frame (callsign + grid +
+  capability mask + heard-SNR, CQ or addressed), capability/SNR **negotiation** (fastest
+  profile both stations support that the link allows), and a live clear-text **chat** over
+  the agreed profile. Self-tested round-trip (hail → negotiate → bidirectional chat).
+- **Setup:** app requires a valid grid square and auto-detects this computer's IP
+  (best-effort WebRTC, editable) + Einstein modem port.
+
 ## 9. Legal
 Amateur radio forbids **encryption** — all RF (PigeonFSK/HOMER/ALE/Selcall and the
-Einstein Modem/Email) is **clear text**; zlib compression is reversible and key-less
+Einstein Modem/Email/Beacon/Chat) is **clear text**; zlib compression is reversible and key-less
 (permitted, not a cipher). Pigeon's internet sharing is AES-256 and never touches RF.
 Transmit only where licensed; identify; respect band plans; a crossband repeater may
 need an automatic-station authorisation.

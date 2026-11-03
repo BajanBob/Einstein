@@ -83,6 +83,7 @@
   <button data-tab="repeater">Repeater</button>
   <button data-tab="import">Import</button>
   <button data-tab="ssp">SSP</button>
+  <button data-tab="ai">AI</button>
   <button data-tab="email">Email</button>
   <button data-tab="tools">Tools</button>
   <button data-tab="settings">Settings</button>
@@ -310,6 +311,58 @@
   </div>
 </section>
 
+<!-- ===== AI / COGNITIVE ENGINE ===== -->
+<section id="t-ai" style="display:none">
+  <div class="card">
+    <h2>Cognitive engine — AI-driven link &amp; propagation</h2>
+    <p class="small muted">Einstein senses its operational theatre from the stations and sounding beacons it hears,
+      then decides — with reasons you can read: it classifies each path (F2 / Es / Tropo-duct / <b>TEP</b> / tropo-scatter /
+      meteor / ground-wave), maps which directions are open, and throttles the modem FEC/speed up or down (with redundancy
+      failover) to hold a link. Explainable, not a black box.</p>
+    <p class="note" id="ai-gridnote"></p>
+  </div>
+  <div class="card">
+    <h2>Heard stations (capture)</h2>
+    <div class="grid2">
+      <div><label>Callsign</label><input id="hs-call" type="text" placeholder="LU5DX" autocapitalize="characters"></div>
+      <div><label>Grid</label><input id="hs-grid" type="text" placeholder="GF05" autocapitalize="characters"></div>
+      <div><label>Freq (MHz)</label><input id="hs-freq" type="number" value="50.313" step="0.001"></div>
+      <div><label>SNR (dB)</label><input id="hs-snr" type="number" value="-5"></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label style="flex:0"><input type="checkbox" id="hs-beacon"> heard as beacon</label>
+      <button class="btn go sm" id="hs-add">Capture</button>
+      <button class="btn sm" id="hs-demo">Load example spots</button>
+      <button class="btn sm" id="hs-clear">Clear</button>
+    </div>
+    <div class="scroll" style="margin-top:8px"><table id="hs-tbl"></table></div>
+  </div>
+  <div class="card" id="ai-anacard" style="display:none">
+    <h2>Propagation analysis</h2>
+    <div id="ai-dir" class="stat"></div>
+  </div>
+  <div class="card">
+    <h2>Link adaptation &amp; redundancy</h2>
+    <div class="row"><label style="flex:0">Measured SNR (dB)</label><input id="ai-snr" type="number" value="12" style="width:90px">
+      <select id="ai-band" style="flex:0"><option>HF</option><option>6m</option><option selected>2m</option><option>70cm</option></select>
+      <button class="btn go sm" id="ai-adapt">Decide</button></div>
+    <div id="ai-link" class="stat" style="margin-top:8px;display:none"></div>
+  </div>
+  <div class="card">
+    <h2>Einstein Beacon — hail &amp; chat</h2>
+    <p class="small muted">Hail other stations with a named Einstein Beacon (callsign + grid + capabilities), as a CQ or to a
+      specific call, on VHF/HF digital frequencies. On contact, the two radios negotiate the fastest modem both support that
+      the SNR allows, then open a live clear-text chat.</p>
+    <div class="grid2">
+      <div><label>Target (callsign or CQ)</label><input id="bc-tgt" type="text" value="CQ" autocapitalize="characters"></div>
+      <div><label>Freq (MHz)</label><input id="bc-freq" type="number" value="144.300" step="0.001"></div>
+    </div>
+    <div class="row" style="margin-top:6px"><button class="btn go sm" id="bc-build">Build hail beacon</button>
+      <button class="btn sm" id="bc-copy">Copy TX command</button></div>
+    <div id="bc-out" class="stat" style="margin-top:8px;display:none"></div>
+  </div>
+</section>
+
 <!-- ===== EMAIL / MODEM ===== -->
 <section id="t-email" style="display:none">
   <div class="card">
@@ -353,13 +406,18 @@
 <!-- ===== SETTINGS ===== -->
 <section id="t-settings" style="display:none">
   <div class="card">
-    <h2>My station</h2>
+    <h2>Station setup <span style="font-weight:400;font-size:12px;color:#ea5455" id="setup-req"></span></h2>
+    <p class="small muted">Grid square is <b>required</b> — Einstein's propagation, SSP and cognitive engine all work from it. The computer IP is auto-detected for the desktop link and modem networking (edit if wrong).</p>
     <div class="grid2">
       <div><label>My callsign</label><input id="my-call" type="text" placeholder="8P6NH" autocapitalize="characters"></div>
-      <div><label>My grid (Maidenhead)</label><input id="my-grid" type="text" placeholder="GK03ec" autocapitalize="characters"></div>
+      <div><label>My grid (Maidenhead) *</label><input id="my-grid" type="text" placeholder="GK03ec" autocapitalize="characters"></div>
+      <div><label>This computer's IP</label><input id="my-ip" type="text" placeholder="detecting…"></div>
+      <div><label>Einstein modem port</label><input id="my-port" type="text" placeholder="8773"></div>
     </div>
-    <div class="row"><button class="btn go sm" id="save-settings">Save</button><span class="small muted" id="set-msg"></span></div>
-    <p class="note">Distance and bearing to each station are computed from your grid. Everything is stored on this device only.</p>
+    <div class="row"><button class="btn go sm" id="save-settings">Save setup</button>
+      <button class="btn sm" id="ip-detect">Re-detect IP</button>
+      <span class="small muted" id="set-msg"></span></div>
+    <p class="note">Everything is stored on this device only. A valid grid unlocks the SSP and AI tabs.</p>
   </div>
   <div class="card">
     <h2>Planned: live station I/O (desktop)</h2>
@@ -464,9 +522,9 @@ fillSel($('#flt-band'),BANDS,'All bands'); fillSel($('#flt-mode'),MODES,'All mod
 
 // ---------- tabs ----------
 $$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['dash','new','log','analyzer','recorder','repeater','import','ssp','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
+  ['dash','new','log','analyzer','recorder','repeater','import','ssp','ai','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
   if(b.dataset.tab==='dash') renderDash(); if(b.dataset.tab==='log') renderLog(); if(b.dataset.tab==='tools') renderTools();
-  if(b.dataset.tab==='email') renderEmail(); if(b.dataset.tab==='ssp') renderSSP();
+  if(b.dataset.tab==='email') renderEmail(); if(b.dataset.tab==='ssp') renderSSP(); if(b.dataset.tab==='ai') renderAI();
   if(b.dataset.tab!=='analyzer' && anRun) stopAnalyzer(); if(b.dataset.tab!=='repeater' && rpRun) stopRepeater(); });
 
 // ---------- SSP — Sea Scatter Propagation (on-device physics) ----------
@@ -581,6 +639,115 @@ document.addEventListener('DOMContentLoaded',()=>{
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(sspText())}`,'_blank'); };
 });
 
+// ---------- AI / Cognitive engine (on-device) ----------
+const COG = (()=>{
+  const bandOf=f=> f<30?'HF':f<54?'6m':f<148?'2m':f<450?'70cm':'UHF+';
+  const crossEq=(a,b)=>(a>0)!==(b>0);
+  const isNS=b=>Math.min(Math.abs(b),Math.abs(b-180),Math.abs(b-360))<=45;
+  function classify(sp, myGrid, now){
+    const [la1,lo1]=SSP.grid2ll(myGrid), [la2,lo2]=SSP.grid2ll(sp.grid);
+    const [dist,brg]=SSP.gc(la1,lo1,la2,lo2); const band=bandOf(sp.freq);
+    const hour=new Date((now||Date.now())).getUTCHours(); const midlat=(Math.abs(la1)+Math.abs(la2))/2;
+    const C=[];
+    if(band==='HF'){
+      if(dist>2500)C.push(['F2',0.8,`HF, ${dist.toFixed(0)} km > 2500 — classic F2 skip`]);
+      else if(dist>400)C.push(['F2/NVIS',0.5,`HF, ${dist.toFixed(0)} km — F2/E one-hop or NVIS`]);
+      else C.push(['Ground-wave/NVIS',0.6,`HF short ${dist.toFixed(0)} km`]);
+      if(crossEq(la1,la2)&&isNS(brg)&&dist>3000&&hour>=14&&hour<=23)C.push(['TEP',0.6,'HF crosses geomagnetic equator, N–S, evening']);
+    } else if(band==='6m'||band==='2m'){
+      if(dist>=800&&dist<=2300&&band==='6m')C.push(['Sporadic-E',0.75,`6m, ${dist.toFixed(0)} km in the 800–2300 km Es window`]);
+      if(band==='6m'&&dist>2300&&dist<=9000)C.push(['Multi-hop Es / F2',0.45,`6m, ${dist.toFixed(0)} km — multi-hop Es or F2`]);
+      if(band==='2m'&&dist>=1000&&dist<=2200)C.push(['Sporadic-E',0.45,`2m, ${dist.toFixed(0)} km — rarer 2m Es`]);
+      if(crossEq(la1,la2)&&isNS(brg)&&dist>=3000&&dist<=8000&&hour>=15&&hour<=23&&midlat<35)C.push(['TEP',0.7,`VHF N–S trans-equatorial, ${dist.toFixed(0)} km, evening`]);
+      if(dist<=2000&&sp.snr>-5)C.push(['Tropo-duct',0.55,`VHF ${dist.toFixed(0)} km, workable SNR — ducting`]);
+      if(dist<=300)C.push(['Ground-wave/LOS',0.7,`VHF short ${dist.toFixed(0)} km`]);
+      if(dist>300&&dist<=2000)C.push(['Tropo-scatter',0.3,`VHF ${dist.toFixed(0)} km — weak tropo-scatter`]);
+      if(dist>=400&&dist<=2300&&!sp.beacon)C.push(['Meteor-scatter',0.2,`VHF ${dist.toFixed(0)} km — meteor bursts possible`]);
+    } else if(band==='70cm'){
+      if(dist<=300)C.push(['Ground-wave/LOS',0.7,`70cm short ${dist.toFixed(0)} km`]);
+      if(dist<=1500&&sp.snr>-3)C.push(['Tropo-duct',0.6,`70cm ${dist.toFixed(0)} km — ducting`]);
+      if(dist>300&&dist<=1500)C.push(['Tropo-scatter',0.3,`70cm ${dist.toFixed(0)} km — tropo-scatter`]);
+    }
+    if(!C.length){ if((band==='2m'||band==='70cm')&&dist>2300)C.push(['Beyond normal VHF/UHF modes',0.15,`${band}, ${dist.toFixed(0)} km — only exceptional chains`]);
+      else C.push(['Unknown',0.2,`${band}, ${dist.toFixed(0)} km — no strong match`]); }
+    C.sort((a,b)=>b[1]-a[1]);
+    return {call:sp.call,grid:sp.grid,band,dist:+dist.toFixed(0),mi:+(dist/1.609).toFixed(0),brg:+brg.toFixed(0),
+            snr:sp.snr,mode:C[0][0],conf:C[0][1],reason:C[0][2]};
+  }
+  const LADDER=[{p:'STANDARD',min:2,bps:560},{p:'PRO',min:10,bps:2679},{p:'PRO_VHF',min:25,bps:9000}];
+  function adapt(snr,band,margin=3){ const u=snr-margin;
+    const L=LADDER.filter(r=>!(r.p==='PRO_VHF'&&(band==='HF'||band==='6m')));
+    let c=L[0]; for(const r of L) if(u>=r.min) c=r;
+    return {...c, headroom:+(u-c.min).toFixed(0)}; }
+  function redundancy(h){ if(h.length<3)return{a:'hold',r:'not enough samples'};
+    const rc=h.slice(-3), tr=rc[2]-rc[0];
+    if(rc[2]<0)return{a:'FAILOVER',r:`SNR ${rc[2]} dB below floor — drop to STANDARD and re-hail`};
+    if(tr<-6)return{a:'THROTTLE DOWN',r:`SNR falling fast (${tr} dB/3) — step down`};
+    if(tr>6)return{a:'THROTTLE UP',r:`SNR rising (${tr>0?'+':''}${tr} dB) — try next rung`};
+    return{a:'hold',r:`link stable (SNR ${rc[2]} dB)`}; }
+  return {classify,adapt,redundancy,bandOf};
+})();
+
+let _spots=[];
+function gridOK(){ const g=(LS.get('e-mygrid','')||'').trim(); try{SSP.grid2ll(g);return g;}catch(e){return null;} }
+function renderAI(){
+  const g=gridOK();
+  $('#ai-gridnote').innerHTML = g ? `Your grid: <b>${g}</b> — bearings/distances computed from it.`
+    : `⚠ Set a valid grid square in <b>Settings → Station setup</b> first; the AI engine needs it.`;
+  drawSpots();
+}
+function drawSpots(){ const g=gridOK(); const t=$('#hs-tbl');
+  if(!_spots.length){ t.innerHTML='<tr><td class="muted">No spots captured yet.</td></tr>'; $('#ai-anacard').style.display='none'; return; }
+  let rows='<tr><th>Call</th><th>Band</th><th>km</th><th>brg</th><th>SNR</th><th>Mode (conf)</th></tr>';
+  const cls=[];
+  for(const sp of _spots){ if(!g){ rows+=`<tr><td>${sp.call}</td><td colspan=5 class="muted">set grid</td></tr>`; continue; }
+    const c=COG.classify(sp,g); cls.push(c);
+    rows+=`<tr><td><b>${c.call}</b></td><td>${c.band}</td><td>${c.dist}</td><td>${c.brg}°</td><td>${c.snr>0?'+':''}${c.snr}</td>`+
+      `<td>${c.mode} <span class="muted">(${c.conf})</span><br><span class="small muted">${c.reason}</span></td></tr>`; }
+  t.innerHTML=rows;
+  if(g&&cls.length){ // direction analysis
+    const names=['N','NE','E','SE','S','SW','W','NW']; const sec={};
+    for(const c of cls){ const i=Math.floor(((c.brg+22.5)%360)/45); (sec[names[i]]=sec[names[i]]||[]).push(c); }
+    let out='';
+    for(const s of names){ const l=sec[s]; if(!l)continue; const m={};
+      for(const c of l) m[c.mode]=Math.max(m[c.mode]||0,c.conf);
+      const bm=Object.keys(m).reduce((a,b)=>m[b]>m[a]?b:a);
+      out+=`<div><b>${s}</b>: ${bm} <span class="muted">(conf ${m[bm]}, ${l.length} stn, to ${Math.max(...l.map(c=>c.dist))} km)</span> — ${l.map(c=>c.call).join(', ')}</div>`; }
+    $('#ai-dir').innerHTML=out||'<span class="muted">no open sectors</span>'; $('#ai-anacard').style.display='';
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const add=$('#hs-add'); if(add) add.onclick=()=>{ const c=$('#hs-call').value.trim().toUpperCase(), gr=$('#hs-grid').value.trim().toUpperCase();
+    if(!c||!gr){return;} _spots.push({call:c,grid:gr,freq:+$('#hs-freq').value,snr:+$('#hs-snr').value,beacon:$('#hs-beacon').checked}); $('#hs-call').value='';$('#hs-grid').value=''; drawSpots(); };
+  const demo=$('#hs-demo'); if(demo) demo.onclick=()=>{ _spots=[
+    {call:'LU5DX',grid:'GF05',freq:50.313,snr:-5,beacon:true},{call:'EA8ABC',grid:'IL38',freq:144.3,snr:3,beacon:true},
+    {call:'W1AW',grid:'FN31',freq:14.074,snr:12,beacon:false},{call:'PY2XYZ',grid:'GG66',freq:144.3,snr:-2,beacon:false},
+    {call:'8P9AB',grid:'GK03',freq:432.1,snr:15,beacon:false}]; drawSpots(); };
+  const clr=$('#hs-clear'); if(clr) clr.onclick=()=>{ _spots=[]; drawSpots(); };
+  const ad=$('#ai-adapt'); if(ad) ad.onclick=()=>{ const snr=+$('#ai-snr').value, band=$('#ai-band').value; const a=COG.adapt(snr,band);
+    const r=COG.redundancy([snr+10,snr+4,snr]); $('#ai-link').style.display='';
+    $('#ai-link').innerHTML=`<b>Throttle → ${a.p}</b> (${a.bps} bps) · headroom ${a.headroom>0?'+':''}${a.headroom} dB on ${band}<br>`+
+      `<span class="muted">Redundancy watch: <b>${a.r===undefined?'':''}</b>${COG.redundancy([snr+10,snr+4,snr]).a} — ${r.r}</span>`; };
+  const bb=$('#bc-build'); if(bb) bb.onclick=()=>{ const g=gridOK(); if(!g){ $('#bc-out').style.display=''; $('#bc-out').innerHTML='⚠ Set your grid in Settings first.'; return; }
+    const call=(LS.get('e-mycall','')||'MYCALL').toUpperCase(), tgt=$('#bc-tgt').value.trim().toUpperCase()||'CQ', f=+$('#bc-freq').value;
+    const cmd=`python3 -c "import einstein_beacon as b; import einstein_modem as m; fr=b.build_beacon('${call}','${g}',${f},['STANDARD','PRO','PRO_VHF'],target='${tgt}'); y,meta=m.modulate(fr,'STANDARD'); print('Einstein Beacon',len(fr),'bytes — TX on ${f} MHz')"`;
+    window._bcCmd=cmd; $('#bc-out').style.display='';
+    $('#bc-out').innerHTML=`<b>Hail ready:</b> ${call} @ ${g} → ${tgt} on ${f} MHz<br><span class="muted">Caps advertised: STANDARD, PRO, PRO_VHF. Run on the SDR/soundcard host:</span><br><code style="font-size:11px;word-break:break-all">${cmd}</code>`; };
+  const bcp=$('#bc-copy'); if(bcp) bcp.onclick=()=>{ if(window._bcCmd){navigator.clipboard?.writeText(window._bcCmd); bcp.textContent='Copied'; setTimeout(()=>bcp.textContent='Copy TX command',1200);} };
+  // IP auto-detect (best-effort WebRTC; editable)
+  const det=$('#ip-detect'); if(det) det.onclick=detectIP;
+});
+function detectIP(){
+  const el=$('#my-ip'); if(!el) return;
+  try{
+    const pc=new RTCPeerConnection({iceServers:[]}); pc.createDataChannel('x');
+    pc.onicecandidate=e=>{ if(!e.candidate) return; const m=/([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate);
+      if(m && !m[1].startsWith('0.')){ if(!el.value||el.value==='detecting…') el.value=m[1]; } };
+    pc.createOffer().then(o=>pc.setLocalDescription(o));
+    setTimeout(()=>{ try{pc.close();}catch(e){} if(el.value==='detecting…'||!el.value) el.value=''; },1500);
+  }catch(e){ el.value=''; }
+}
+
 // ---------- Einstein Email / Modem ----------
 const EM_TIERS = {
   STANDARD: {name:'Standard (free)', bw:'~1000 Hz', mod:'QPSK', bps:'≈0.56 kbps',
@@ -591,7 +758,7 @@ const EM_TIERS = {
     gov:'unlimited airtime', note:'Needs a strong local VHF/FM link (~25+ dB SNR) for 64-QAM. Not for HF SSB.'}
 };
 function renderEmail(){
-  const t = $('#em-to'), f=$('#em-from'); if(!f.value) f.value=(localStorage.getItem('my-call')||'');
+  const t = $('#em-to'), f=$('#em-from'); if(!f.value) f.value=(LS.get('e-mycall','')||'');
   emTierInfo();
 }
 function emTierInfo(){
@@ -749,9 +916,18 @@ setFace(LS.get('e-theme','dark')||'dark');
 
 // ---------- settings ----------
 $('#my-call').value=LS.get('e-mycall',''); $('#my-grid').value=LS.get('e-mygrid','');
+$('#my-ip').value=LS.get('e-myip',''); $('#my-port').value=LS.get('e-myport','8773');
 $('#set-rigctld').value=LS.get('e-rigctld','127.0.0.1:4532'); $('#set-wsjt').value=LS.get('e-wsjt','2237'); $('#set-rigdrift').value=LS.get('e-rigdrift','0');
-$('#save-settings').onclick=()=>{ LS.set('e-mycall',$('#my-call').value.trim().toUpperCase()); LS.set('e-mygrid',$('#my-grid').value.trim().toUpperCase());
-  LS.set('e-rigctld',$('#set-rigctld').value.trim()); LS.set('e-wsjt',$('#set-wsjt').value.trim()); LS.set('e-rigdrift',$('#set-rigdrift').value.trim()||'0'); $('#set-msg').textContent='Saved ✓'; setTimeout(()=>$('#set-msg').textContent='',1500); };
+function setupReqMark(){ let ok=false; try{SSP.grid2ll(($('#my-grid').value||'').trim());ok=true;}catch(e){}
+  $('#setup-req').textContent = ok?'' : '· grid square required'; }
+setupReqMark(); $('#my-grid').addEventListener('input',setupReqMark);
+if(!$('#my-ip').value){ $('#my-ip').value='detecting…'; detectIP(); }
+$('#save-settings').onclick=()=>{ const gv=$('#my-grid').value.trim().toUpperCase();
+  try{ SSP.grid2ll(gv); }catch(e){ $('#set-msg').textContent='⚠ enter a valid grid (e.g. GK03)'; return; }
+  LS.set('e-mycall',$('#my-call').value.trim().toUpperCase()); LS.set('e-mygrid',gv);
+  LS.set('e-myip',$('#my-ip').value.trim()); LS.set('e-myport',$('#my-port').value.trim()||'8773');
+  LS.set('e-rigctld',$('#set-rigctld').value.trim()); LS.set('e-wsjt',$('#set-wsjt').value.trim()); LS.set('e-rigdrift',$('#set-rigdrift').value.trim()||'0');
+  $('#set-msg').textContent='Saved ✓'; setupReqMark(); setTimeout(()=>$('#set-msg').textContent='',1500); };
 
 // ---------- new entry ----------
 function utcNow(){ return new Date().toISOString().slice(0,19).replace('T',' '); }

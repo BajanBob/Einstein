@@ -18,6 +18,13 @@ what is software vs what needs radio hardware.
   dashboard, ADIF/CSV export.
 - **Tools** — **MMSI** decoder (ITU-R M.585), **Selcall** tone tables (CCIR/ZVEI1/EEA +
   aeronautical SELCAL), and the international **ALE** channel plan (HFLINK HFN).
+- **AI — Cognitive engine** — Einstein senses the stations and sounding beacons it hears
+  and decides, with readable reasons: it classifies each path (**F2 / Sporadic-E /
+  Tropo-duct / TEP / tropo-scatter / meteor / ground-wave**), maps which directions are
+  open, and throttles the modem FEC/speed up or down with redundancy failover. Hail other
+  stations with the **Einstein Beacon** (callsign + grid + capabilities, CQ or addressed)
+  on VHF/HF digital, then the radios **negotiate the fastest mutually-supported modem** and
+  open a live clear-text **chat**. Transparent, not a black box. Spec: `rf/COGNITIVE.md`.
 - **SSP — Sea Scatter Propagation** — AI-assisted over-water 2 m/70 cm path analysis.
   Pick two grid squares; Einstein aggregates the marine-weather variables (SST, air temp,
   humidity, pressure, wind) along the great-circle path from live data, computes
