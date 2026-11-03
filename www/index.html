@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Einstein — Weak-Signal Station Log</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0f14'/%3E%3Cg fill='none' stroke='%2366e0ff' stroke-width='3'%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='22' ry='9' transform='rotate(120 32 32)'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root{ --bg:#070b10; --card:#0e151d; --line:#1d2a36; --fg:#e6eef6; --muted:#8299ad; --accent:#66e0ff; --accent2:#ffb648; --ok:#45d98a; --bad:#ff5d6c; --mono:ui-monospace,Menlo,Consolas,monospace; --body:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  :root[data-theme="light"]{ --bg:#eef3f7; --card:#fff; --line:#cfdae4; --fg:#0f1d29; --muted:#5a7084; }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding:0 0 40px}
+  header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:10}
+  .logo{width:34px;height:34px;flex:none}
+  h1{font-size:19px;margin:0;letter-spacing:.02em}
+  .sub{color:var(--muted);font-size:12px;margin:0}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 16px 4px;position:sticky;top:63px;background:var(--bg);z-index:9}
+  .tabs button{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:8px 14px;font:600 13px var(--body);cursor:pointer;white-space:nowrap}
+  .tabs button.on{border-color:var(--accent);color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+  h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,select,textarea{width:100%;background:#0a1017;border:1px solid var(--line);border-radius:9px;color:var(--fg);padding:10px;font:14px var(--body)}
+  :root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#f3f7fb}
+  textarea{min-height:90px;font:12px var(--mono);resize:vertical}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .btn{border:1px solid var(--line);background:#16222e;color:var(--fg);border-radius:9px;padding:10px 14px;font:600 14px var(--body);cursor:pointer}
+  .btn.go{background:var(--accent);border-color:transparent;color:#042a33}
+  .btn.sm{padding:7px 11px;font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  .stat{background:#0a1017;border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .stat .k{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font:600 22px var(--mono);margin-top:3px}
+  .muted{color:var(--muted)} .small{font-size:12px} .ok{color:var(--ok)} .bad{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+  td.mono{font-family:var(--mono)}
+  .scroll{overflow-x:auto}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:11px;color:var(--muted)}
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
+  footer{color:var(--muted);font-size:11px;text-align:center;margin-top:20px}
+  .bar{height:7px;background:var(--line);border-radius:999px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0e151d"/><g fill="none" stroke="#66e0ff" stroke-width="3"><circle cx="32" cy="32" r="6"/><ellipse cx="32" cy="32" rx="22" ry="9"/><ellipse cx="32" cy="32" rx="22" ry="9" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="22" ry="9" transform="rotate(120 32 32)"/></g></svg>
+  <div><h1>Einstein</h1><p class="sub">Weak-signal station log &amp; analysis — in tribute to Albert</p></div>
+  <div style="margin-left:auto"><button class="btn sm" id="theme-btn">◐</button></div>
+</header>
+
+<div class="tabs" id="tabs">
+  <button data-tab="dash" class="on">Dashboard</button>
+  <button data-tab="new">New entry</button>
+  <button data-tab="log">Log</button>
+  <button data-tab="analyzer">Analyzer</button>
+  <button data-tab="recorder">Recorder</button>
+  <button data-tab="repeater">Repeater</button>
+  <button data-tab="import">Import</button>
+  <button data-tab="tools">Tools</button>
+  <button data-tab="settings">Settings</button>
+</div>
+
+<div class="wrap">
+
+<!-- ===== DASHBOARD ===== -->
+<section id="t-dash">
+  <div class="card">
+    <h2>Station summary</h2>
+    <div class="grid3">
+      <div class="stat"><div class="k">Entries</div><div class="v" id="s-total">0</div></div>
+      <div class="stat"><div class="k">Best DX (km)</div><div class="v" id="s-dx">—</div></div>
+      <div class="stat"><div class="k">Bands</div><div class="v" id="s-bands">0</div></div>
+    </div>
+    <div class="grid3" style="margin-top:10px">
+      <div class="stat"><div class="k">Weakest SNR</div><div class="v" id="s-snr">—</div></div>
+      <div class="stat"><div class="k">Modes</div><div class="v" id="s-modes">0</div></div>
+      <div class="stat"><div class="k">Grids</div><div class="v" id="s-grids">0</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>By band</h2>
+    <div id="by-band"><p class="muted small">No entries yet.</p></div>
+  </div>
+  <div class="card">
+    <h2>By mode</h2>
+    <div id="by-mode"><p class="muted small">No entries yet.</p></div>
+  </div>
+  <div class="card">
+    <h2>Recent</h2>
+    <div class="scroll"><table id="recent"><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ===== NEW ENTRY ===== -->
+<section id="t-new" style="display:none">
+  <div class="card">
+    <h2>New log entry</h2>
+    <div class="grid2">
+      <div><label>Date/time (UTC)</label><input id="f-utc" type="text" placeholder="YYYY-MM-DD HH:MM:SS"></div>
+      <div><label>Band</label><select id="f-band"></select></div>
+    </div>
+    <div class="grid2">
+      <div><label>Mode</label><select id="f-mode"></select></div>
+      <div><label>Frequency (MHz)</label><input id="f-freq" type="text" placeholder="144.174"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Callsign heard</label><input id="f-call" type="text" placeholder="K1ABC" autocapitalize="characters"></div>
+      <div><label>Grid (Maidenhead)</label><input id="f-grid" type="text" placeholder="FN42" autocapitalize="characters"></div>
+    </div>
+    <div class="grid3">
+      <div><label>SNR (dB)</label><input id="f-snr" type="text" placeholder="-21"></div>
+      <div><label>Freq drift (Hz)</label><input id="f-drift" type="text" placeholder="0.2"></div>
+      <div><label>Integration (s)</label><input id="f-integ" type="text" placeholder="120"></div>
+    </div>
+    <div class="row"><span class="pill" id="f-dxb">distance / bearing: —</span></div>
+
+    <h2 style="margin-top:16px">Conditions (for propagation study)</h2>
+    <div class="grid3">
+      <div><label>Antenna heading (°)</label><input id="f-ant" type="text" placeholder="e.g. 45"></div>
+      <div><label>Wind (dir° / kt)</label><input id="f-wind" type="text" placeholder="NE / 12"></div>
+      <div><label>Barometric (hPa)</label><input id="f-baro" type="text" placeholder="1013"></div>
+    </div>
+    <div class="grid3">
+      <div><label>Rain (mm/h)</label><input id="f-rain" type="text" placeholder="0"></div>
+      <div><label>Humidity (%)</label><input id="f-hum" type="text" placeholder="78"></div>
+      <div><label>Air temp (°C)</label><input id="f-temp" type="text" placeholder="27"></div>
+    </div>
+    <div class="grid3">
+      <div><label>Sea surface temp (°C)</label><input id="f-sst" type="text" placeholder="28"></div>
+      <div><label>Measured freq offset (Hz)</label><input id="f-offset" type="text" placeholder="+1.2"></div>
+      <div style="align-self:end"><button class="btn sm" id="calc-prop" type="button" style="width:100%">Analyse propagation</button></div>
+    </div>
+    <div id="prop-out" class="stat" style="margin-top:10px;display:none"></div>
+    <label>Notes</label><textarea id="f-notes" placeholder="FEC, repeats, Q65 submode, EME window, troposcatter path…" style="font-family:var(--body);min-height:60px"></textarea>
+    <div class="row"><button class="btn go" id="save-entry">Save entry</button><button class="btn sm" id="now-btn">Set UTC now</button><span class="small muted" id="save-msg"></span></div>
+  </div>
+</section>
+
+<!-- ===== LOG ===== -->
+<section id="t-log" style="display:none">
+  <div class="card">
+    <h2>Log</h2>
+    <div class="row">
+      <select id="flt-band" style="width:auto"><option value="">All bands</option></select>
+      <select id="flt-mode" style="width:auto"><option value="">All modes</option></select>
+      <button class="btn sm" id="exp-adif">Export ADIF</button>
+      <button class="btn sm" id="exp-csv">Export CSV</button>
+      <button class="btn sm" id="clear-log">Clear all</button>
+    </div>
+    <div class="scroll" style="margin-top:12px"><table id="log-table"><thead><tr>
+      <th>UTC</th><th>Band</th><th>Mode</th><th>Call</th><th>Grid</th><th>km</th><th>Brg</th><th>SNR</th><th>Freq</th><th></th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ===== ANALYZER ===== -->
+<section id="t-analyzer" style="display:none">
+  <div class="card">
+    <h2>Signal analyzer — spectrum &amp; waterfall</h2>
+    <p class="small muted">Feed the rig's audio (USB codec / line-in / mic) into this device and watch the band in real time. Works on any band the radio is tuned to — the display is audio‑rate (0–6 kHz of the SSB passband).</p>
+    <div class="row"><button class="btn go sm" id="an-start">▶ Start</button><button class="btn sm" id="an-stop">⏹ Stop</button><span class="small muted" id="an-state" style="align-self:center">stopped</span></div>
+    <canvas id="an-spec" width="800" height="150" style="width:100%;height:110px;background:#060b10;border:1px solid var(--line);border-radius:10px;margin-top:10px"></canvas>
+    <canvas id="an-fall" width="800" height="240" style="width:100%;height:200px;background:#060b10;border:1px solid var(--line);border-radius:10px;margin-top:8px"></canvas>
+    <div class="grid3" style="margin-top:10px">
+      <div class="stat"><div class="k">Peak tone</div><div class="v" id="an-peak" style="font-size:18px">—</div></div>
+      <div class="stat"><div class="k">Peak level</div><div class="v" id="an-lvl" style="font-size:18px">—</div></div>
+      <div class="stat"><div class="k">Est. SNR</div><div class="v" id="an-snr" style="font-size:18px">—</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RECORDER ===== -->
+<section id="t-recorder" style="display:none">
+  <div class="card">
+    <h2>Audio recorder</h2>
+    <p class="small muted">Record off-air audio (the rig's output) to a file for later decoding, QSL or analysis. Saved locally; drop a WAV/WebM into any decoder or back into Einstein's Import.</p>
+    <div class="row"><button class="btn go sm" id="rec-start">● Record</button><button class="btn sm" id="rec-stop">⏹ Stop</button><span class="small muted" id="rec-state" style="align-self:center">idle</span></div>
+    <div id="rec-list" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- ===== REPEATER ===== -->
+<section id="t-repeater" style="display:none">
+  <div class="card">
+    <h2>Crossband repeater controller</h2>
+    <p class="small muted">Monitors receive audio and signals when to key the TX radio — the brains of a VHF↔HF or 2 m↔70 cm crossband repeater. Set the VOX threshold and hang time; Einstein shows RX/TX state and logs activity.</p>
+    <div class="grid2">
+      <div><label>VOX threshold (0–100)</label><input id="rp-thr" type="range" min="1" max="100" value="18"></div>
+      <div><label>Hang time (s)</label><input id="rp-hang" type="text" value="1.5"></div>
+    </div>
+    <div class="row"><button class="btn go sm" id="rp-start">▶ Start monitor</button><button class="btn sm" id="rp-stop">⏹ Stop</button></div>
+    <div class="grid3" style="margin-top:10px">
+      <div class="stat"><div class="k">RX level</div><div class="v" id="rp-lvl" style="font-size:18px">—</div></div>
+      <div class="stat"><div class="k">State</div><div class="v" id="rp-state" style="font-size:18px">idle</div></div>
+      <div class="stat"><div class="k">Keyings</div><div class="v" id="rp-count" style="font-size:18px">0</div></div>
+    </div>
+    <p class="note"><b>Hardware:</b> a real crossband repeat needs two radios (or a dual‑band rig with crossband) and a PTT line. This panel is the controller + monitor; actual keying is driven by the desktop helper over <b>Hamlib (rigctld)</b> PTT or a CAT/serial keyer — configure <code>rigctld</code> in Settings. Transmit only where licensed; a crossband repeater may need a repeater/automatic‑station authorisation.</p>
+  </div>
+</section>
+
+<!-- ===== IMPORT ===== -->
+<section id="t-import" style="display:none">
+  <div class="card">
+    <h2>Import WSJT-X decodes</h2>
+    <p class="small muted">Paste decode lines from WSJT-X (the Band Activity pane, or lines from <b>ALL.txt</b>). Einstein parses mode, SNR, dT, frequency and the callsign/grid from the message, and adds them to your log — a cross-platform way to capture real FT8/FT4/Q65/MSK144/WSPR decodes without extra software.</p>
+    <label>Band for these decodes</label><select id="imp-band"></select>
+    <label>Paste decodes</label>
+    <textarea id="imp-text" placeholder="140000  -15  0.2  1575 ~  CQ K1ABC FN42&#10;000000_120000   144.174 Rx FT8    -21  0.1  809 CQ VP8ABC IO91"></textarea>
+    <div class="row"><button class="btn go" id="imp-run">Parse &amp; add</button><span class="small muted" id="imp-msg"></span></div>
+    <p class="note">Live capture over WSJT-X's UDP broadcast, rigctld (Hamlib) CAT control, and PSK Reporter spotting need raw network sockets — those run in the <b>desktop (Windows/Linux)</b> build's helper and are the next phase; the log, analysis and import here work on every platform.</p>
+  </div>
+</section>
+
+<!-- ===== TOOLS ===== -->
+<section id="t-tools" style="display:none">
+  <div class="card">
+    <h2>MMSI decoder (ITU-R M.585)</h2>
+    <label>MMSI (9 digits)</label>
+    <div class="row"><input id="mmsi-in" type="text" placeholder="314123456" style="flex:1;min-width:0"><button class="btn go sm" id="mmsi-go">Decode</button></div>
+    <div id="mmsi-out" class="stat" style="margin-top:10px;display:none"></div>
+  </div>
+  <div class="card">
+    <h2>Selcall tone systems</h2>
+    <p class="small muted">Two-tone-sequential / dual-tone selective calling used by HF/VHF data terminals (Codan, Barrett, marine) and aviation. Reference tone tables (Hz).</p>
+    <div class="scroll"><table id="selcall-tbl"></table></div>
+    <p class="note">A <b>repeat</b> tone is sent when two adjacent digits are equal. Encode/decode is implemented in <code>rf/selcall.py</code>.</p>
+  </div>
+  <div class="card">
+    <h2>International ALE channels (HFLINK HFN, USB kHz)</h2>
+    <p class="small muted">De-facto international amateur ALE calling channels. Region-dependent — verify your band plan and licence.</p>
+    <div class="scroll"><table id="ale-tbl"></table></div>
+  </div>
+</section>
+
+<!-- ===== SETTINGS ===== -->
+<section id="t-settings" style="display:none">
+  <div class="card">
+    <h2>My station</h2>
+    <div class="grid2">
+      <div><label>My callsign</label><input id="my-call" type="text" placeholder="8P6NH" autocapitalize="characters"></div>
+      <div><label>My grid (Maidenhead)</label><input id="my-grid" type="text" placeholder="GK03ec" autocapitalize="characters"></div>
+    </div>
+    <div class="row"><button class="btn go sm" id="save-settings">Save</button><span class="small muted" id="set-msg"></span></div>
+    <p class="note">Distance and bearing to each station are computed from your grid. Everything is stored on this device only.</p>
+  </div>
+  <div class="card">
+    <h2>Planned: live station I/O (desktop)</h2>
+    <div class="grid2">
+      <div><label>rigctld host:port (Hamlib)</label><input id="set-rigctld" type="text" placeholder="127.0.0.1:4532"></div>
+      <div><label>WSJT-X UDP port</label><input id="set-wsjt" type="text" placeholder="2237"></div>
+    </div>
+    <label>Rig reference drift (Hz) — your known oscillator offset (GPSDO/OCXO calibration)</label>
+    <input id="set-rigdrift" type="text" placeholder="0.0">
+    <p class="note">The drift classifier subtracts this from the measured offset before testing for the sea Bragg Doppler — so a disciplined reference lets Einstein tell <b>sea Doppler from rig drift</b>.</p>
+    <p class="note">Saved for the desktop helper that will talk to your IC-9100 / FT-991A / FT-710 / SDRs via Hamlib and capture WSJT-X decodes live. Not active in this build.</p>
+  </div>
+  <div class="card">
+    <h2>About</h2>
+    <p class="small muted">Einstein is a weak-signal station companion: an honest logging and analysis tool that works alongside WSJT-X and Hamlib rather than re-implementing their decoders. Modes you log include WSPR, FT8, FT4, MSK144, Q65, FST4W, JT65, 2 m / 70 cm EME, meteor scatter and troposcatter. Data stays on your device; export ADIF for your main logbook.</p>
+  </div>
+</section>
+
+</div>
+<footer>Einstein · on-device · ADIF/CSV export · v1</footer>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const BANDS=["6m (50 MHz)","2m (144 MHz)","1.25m (222 MHz)","70cm (432 MHz)","33cm (902 MHz)","23cm (1296 MHz)","HF"];
+const BANDHZ={"6m (50 MHz)":"50","2m (144 MHz)":"144","1.25m (222 MHz)":"222","70cm (432 MHz)":"432","33cm (902 MHz)":"902","23cm (1296 MHz)":"1296","HF":"14"};
+const MODES=["FT8","FT4","WSPR","FST4W","MSK144","Q65","JT65","EME (2m)","EME (70cm)","Meteor scatter","Troposcatter","Ocean scatter (exp)","SSB","CW","Other"];
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const LS={ get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} };
+
+// ---------- Maidenhead grid -> lat/lon, distance, bearing ----------
+function gridToLatLon(g){ g=(g||'').trim().toUpperCase(); if(g.length<4) return null;
+  const A='A'.charCodeAt(0);
+  let lon=(g.charCodeAt(0)-A)*20-180, lat=(g.charCodeAt(1)-A)*10-90;
+  lon+=parseInt(g[2])*2; lat+=parseInt(g[3])*1;
+  if(g.length>=6){ lon+=(g.charCodeAt(4)-A)*(2/24)+(1/24); lat+=(g.charCodeAt(5)-A)*(1/24)+(0.5/24); }
+  else { lon+=1; lat+=0.5; }
+  return {lat,lon}; }
+function haversine(a,b){ const R=6371,r=Math.PI/180;
+  const dLat=(b.lat-a.lat)*r,dLon=(b.lon-a.lon)*r;
+  const s=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s)); }
+function bearing(a,b){ const r=Math.PI/180;
+  const y=Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r);
+  const x=Math.cos(a.lat*r)*Math.sin(b.lat*r)-Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r);
+  return (Math.atan2(y,x)/r+360)%360; }
+function compass(b){ return ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(b/22.5)%16]; }
+function dxOf(grid){ const mg=gridToLatLon($('#my-grid').value||LS.get('e-mygrid','')); const tg=gridToLatLon(grid);
+  if(!mg||!tg) return null; return {km:Math.round(haversine(mg,tg)), brg:Math.round(bearing(mg,tg))}; }
+
+// ---------- propagation physics (AI-assisted, Claude) ----------
+const C_=299792458, G_=9.81;
+function bandFreqMHz(band){ const m=(band||'').match(/(\d+(?:\.\d+)?)\s*MHz/); return m?parseFloat(m[1]):null; }
+function braggHz(fMHz){ if(!fMHz) return null; const L=C_/(fMHz*1e6), lo=L/2; const v=Math.sqrt(G_*lo/(2*Math.PI)); return 2*v/L; }
+// saturation vapor pressure (hPa), T in C
+function esat(T){ return 6.112*Math.exp(17.62*T/(243.12+T)); }
+// refractivity N from T(C), P(hPa), vapor pressure e(hPa)
+function refractivity(T,P,e){ const TK=T+273.15; return 77.6*P/TK + 3.73e5*e/(TK*TK); }
+// specific humidity (g/kg) from vapor pressure e(hPa), pressure p(hPa)
+function spechum(e,p){ return 0.622*e/(p-0.378*e)*1000; }
+// Over-water ducting from SST, air temp, humidity, pressure. Two mechanisms:
+//  (1) EVAPORATION duct — moist saturated sea surface vs drier air aloft (specific-
+//      humidity deficit); strongest over warm seas, amplified when unstable.
+//  (2) SURFACE-BASED duct / INVERSION — warm dry air over a cooler sea (air-sea ΔT>0).
+// Both trap VHF/UHF over water. We report an indicative evaporation duct height, the
+// air-sea ΔT, the modified-refractivity gradient, and an overall likelihood.
+function ductAnalysis({sst,tair,rh,p}){
+  p=p||1013; if(sst==null||tair==null||rh==null) return null;
+  const eSurf=0.98*esat(sst), eAir=(rh/100)*esat(tair);
+  const qSurf=spechum(eSurf,p), qAir=spechum(eAir,p);
+  const dq=Math.max(0,qSurf-qAir);              // humidity deficit driving evaporation duct
+  const astd=tair-sst;                          // >0 warm air over cool sea (stable/inversion)
+  const stab=Math.max(0.5,Math.min(1.6,1+0.08*(-astd))); // unstable (astd<0) amplifies evap duct
+  let edh=Math.round(Math.max(0,Math.min(40, 2+2.2*dq*stab)));  // indicative evap duct height (m)
+  // modified-refractivity gradient over the first 10 m (auxiliary)
+  const dMdh=((refractivity(tair,p,eAir)+0.157*10)-(refractivity(sst,p,eSurf)))/10;
+  const inversion = astd>1.5;                   // warm air aloft -> surface-based duct
+  let like='Low';
+  if(edh>15 || (inversion&&astd>3)) like='High';
+  else if(edh>6 || inversion) like='Moderate';
+  return { edh, astd:+astd.toFixed(1), dMdh:+dMdh.toFixed(2), dq:+dq.toFixed(1), like,
+           mech: inversion?'surface inversion':(edh>6?'evaporation duct':'weak'),
+           superref: dMdh<0.079 };
+}
+function classifyDoppler(offsetHz, fMHz){
+  const fB=braggHz(fMHz); if(fB==null||offsetHz==null) return null;
+  const rig=parseFloat(LS.get('e-rigdrift','0'))||0;
+  const resid=offsetHz-rig; const tol=Math.max(0.3, fB*0.35);
+  const sea=Math.abs(Math.abs(resid)-fB)<=tol;
+  return { fB:+fB.toFixed(2), resid:+resid.toFixed(2), sea };
+}
+function num(id){ const v=parseFloat(($('#'+id).value||'').replace(/[^\d.\-]/g,'')); return isNaN(v)?null:v; }
+
+// ---------- state ----------
+let LOG = LS.get('e-log',[]);
+function saveLog(){ LS.set('e-log',LOG); }
+
+// ---------- populate selects ----------
+function fillSel(sel,arr,first){ sel.innerHTML=(first?`<option value="">${first}</option>`:'')+arr.map(x=>`<option>${x}</option>`).join(''); }
+fillSel($('#f-band'),BANDS); fillSel($('#f-mode'),MODES); fillSel($('#imp-band'),BANDS);
+$('#f-band').value="2m (144 MHz)"; $('#imp-band').value="2m (144 MHz)";
+fillSel($('#flt-band'),BANDS,'All bands'); fillSel($('#flt-mode'),MODES,'All modes');
+
+// ---------- tabs ----------
+$$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['dash','new','log','analyzer','recorder','repeater','import','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
+  if(b.dataset.tab==='dash') renderDash(); if(b.dataset.tab==='log') renderLog(); if(b.dataset.tab==='tools') renderTools();
+  if(b.dataset.tab!=='analyzer' && anRun) stopAnalyzer(); if(b.dataset.tab!=='repeater' && rpRun) stopRepeater(); });
+
+// ---------- shared audio input ----------
+let audioCtx=null;
+async function micSource(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  return {stream, src:audioCtx.createMediaStreamSource(stream)}; }
+
+// ---------- Signal analyzer: spectrum + waterfall ----------
+let anRun=false, anRAF=null, anStream=null;
+async function startAnalyzer(){ if(anRun) return;
+  try{ const {stream,src}=await micSource(); anStream=stream;
+    const an=audioCtx.createAnalyser(); an.fftSize=2048; src.connect(an);
+    const bins=an.frequencyBinCount, data=new Uint8Array(bins);
+    const spec=$('#an-spec'), sx=spec.getContext('2d'), fall=$('#an-fall'), fx=fall.getContext('2d');
+    const nyq=audioCtx.sampleRate/2, maxHz=6000, maxBin=Math.min(bins, Math.round(maxHz/nyq*bins));
+    anRun=true; $('#an-state').textContent='running'; $('#an-start').classList.add('on');
+    const draw=()=>{ if(!anRun) return; an.getByteFrequencyData(data);
+      sx.clearRect(0,0,spec.width,spec.height); sx.strokeStyle='#66e0ff'; sx.beginPath();
+      let peak=0,pk=0,sum=0; for(let i=0;i<maxBin;i++){ const v=data[i]; sum+=v; if(v>peak){peak=v;pk=i;}
+        const x=i/maxBin*spec.width, y=spec.height-(v/255)*spec.height; i?sx.lineTo(x,y):sx.moveTo(x,y); }
+      sx.stroke();
+      // waterfall scroll
+      const img=fx.getImageData(0,0,fall.width,fall.height); fx.putImageData(img,0,1);
+      for(let x=0;x<fall.width;x++){ const i=Math.floor(x/fall.width*maxBin); const v=data[i];
+        fx.fillStyle=`hsl(${200-v},90%,${Math.min(60,v/3)}%)`; fx.fillRect(x,0,1,1); }
+      const peakHz=Math.round(pk/bins*nyq); const mean=sum/maxBin;
+      const snr=peak>0?Math.round(20*Math.log10((peak+1)/(mean+1))):0;
+      $('#an-peak').textContent=peakHz+' Hz'; $('#an-lvl').textContent=Math.round(peak/255*100)+'%'; $('#an-snr').textContent=snr+' dB';
+      anRAF=requestAnimationFrame(draw); };
+    draw();
+  }catch(e){ $('#an-state').textContent='mic/line-in blocked'; }
+}
+function stopAnalyzer(){ anRun=false; if(anRAF)cancelAnimationFrame(anRAF); if(anStream)anStream.getTracks().forEach(t=>t.stop()); anStream=null; $('#an-state').textContent='stopped'; $('#an-start').classList.remove('on'); }
+$('#an-start').onclick=startAnalyzer; $('#an-stop').onclick=stopAnalyzer;
+
+// ---------- Audio recorder ----------
+let mediaRec=null, recChunks=[], recT0=0, recStream=null, recUrls=[];
+$('#rec-start').onclick=async()=>{ if(mediaRec) return;
+  try{ recStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    mediaRec=new MediaRecorder(recStream); recChunks=[]; recT0=Date.now();
+    mediaRec.ondataavailable=e=>recChunks.push(e.data);
+    mediaRec.onstop=()=>{ const blob=new Blob(recChunks,{type:mediaRec.mimeType||'audio/webm'}); const url=URL.createObjectURL(blob); recUrls.push(url);
+      const secs=Math.round((Date.now()-recT0)/1000); const name='einstein_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.webm';
+      const row=document.createElement('div'); row.className='st-carrier'; row.style.cssText='display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;padding:8px;margin-top:6px';
+      row.innerHTML='<span style="flex:1" class="small mono">'+name+' · '+secs+'s</span>';
+      const a=document.createElement('a'); a.href=url; a.download=name; a.className='btn sm'; a.textContent='Download'; row.appendChild(a);
+      const au=document.createElement('audio'); au.controls=true; au.src=url; au.style.cssText='display:block;width:100%;margin-top:6px';
+      const wrap=document.createElement('div'); wrap.appendChild(row); wrap.appendChild(au); $('#rec-list').prepend(wrap); };
+    mediaRec.start(); $('#rec-state').textContent='● recording…'; }
+  catch(e){ $('#rec-state').textContent='mic/line-in blocked'; } };
+$('#rec-stop').onclick=()=>{ if(mediaRec){ mediaRec.stop(); recStream.getTracks().forEach(t=>t.stop()); mediaRec=null; $('#rec-state').textContent='idle'; } };
+
+// ---------- Crossband repeater controller (monitor + keying logic) ----------
+let rpRun=false, rpRAF=null, rpStream=null, rpKeyed=false, rpHangUntil=0, rpCount=0;
+async function startRepeater(){ if(rpRun) return;
+  try{ const {stream,src}=await micSource(); rpStream=stream;
+    const an=audioCtx.createAnalyser(); an.fftSize=1024; src.connect(an); const data=new Uint8Array(an.frequencyBinCount);
+    rpRun=true; $('#rp-state').textContent='listening';
+    const loop=()=>{ if(!rpRun) return; an.getByteFrequencyData(data);
+      let s=0; for(const v of data)s+=v; const lvl=Math.round(s/data.length/255*100);
+      $('#rp-lvl').textContent=lvl+'%';
+      const thr=+$('#rp-thr').value, hang=(parseFloat($('#rp-hang').value)||1.5)*1000, now=Date.now();
+      if(lvl>=thr){ rpHangUntil=now+hang; if(!rpKeyed){ rpKeyed=true; rpCount++; $('#rp-count').textContent=rpCount; $('#rp-state').textContent='▶ TX (key radio B)'; /* desktop helper: rigctld PTT ON */ } }
+      else if(rpKeyed && now>rpHangUntil){ rpKeyed=false; $('#rp-state').textContent='listening'; /* rigctld PTT OFF */ }
+      rpRAF=requestAnimationFrame(loop); };
+    loop();
+  }catch(e){ $('#rp-state').textContent='mic/line-in blocked'; } }
+function stopRepeater(){ rpRun=false; if(rpRAF)cancelAnimationFrame(rpRAF); if(rpStream)rpStream.getTracks().forEach(t=>t.stop()); rpStream=null; rpKeyed=false; $('#rp-state').textContent='idle'; }
+$('#rp-start').onclick=startRepeater; $('#rp-stop').onclick=stopRepeater;
+
+// ---------- Tools: MMSI decoder, Selcall reference, ALE channels ----------
+const MID={ "201":"Albania","203":"Austria","205":"Belgium","211":"Germany","224":"Spain","226":"France",
+ "232":"United Kingdom","233":"United Kingdom","234":"United Kingdom","235":"United Kingdom","244":"Netherlands",
+ "247":"Italy","257":"Norway","265":"Sweden","273":"Russia","303":"Alaska (USA)","338":"USA","366":"USA","367":"USA",
+ "316":"Canada","309":"Bahamas","314":"Barbados","339":"Jamaica","343":"St Lucia","347":"St Vincent","345":"Mexico",
+ "351":"Panama","375":"St Kitts & Nevis","379":"US Virgin Is","431":"Japan","440":"South Korea","503":"Australia",
+ "512":"New Zealand","563":"Singapore","710":"Brazil","725":"Chile","775":"Venezuela" };
+function midCountry(m){ return MID[m]||('MID '+m+' (not in table)'); }
+function mmsiDecode(s){ s=(s||'').trim();
+  if(!/^\d{9}$/.test(s)) return {valid:false,error:'MMSI must be exactly 9 digits'};
+  let cat,mid;
+  if(s.startsWith('111')){cat='SAR aircraft';mid=s.slice(3,6);}
+  else if(s.startsWith('00')){cat='Coast station';mid=s.slice(2,5);}
+  else if(s.startsWith('0')){cat='Group of ships';mid=s.slice(1,4);}
+  else if(s.startsWith('99')){cat='Aid to navigation (AtoN)';mid=s.slice(2,5);}
+  else if(s.startsWith('98')){cat='Craft w/ parent ship';mid=s.slice(2,5);}
+  else if(s.startsWith('8')){return {valid:true,mmsi:s,category:'Handheld VHF/DSC',mid:'-',country:'(no national MID)'};}
+  else {cat='Ship station';mid=s.slice(0,3);}
+  return {valid:true,mmsi:s,category:cat,mid,country:midCountry(mid)};
+}
+const SELCALL={
+ 'CCIR (100 ms)':{0:1981,1:1124,2:1197,3:1275,4:1358,5:1446,6:1540,7:1640,8:1747,9:1860,'Repeat':2400},
+ 'ZVEI1 (70 ms)':{0:2400,1:1060,2:1160,3:1270,4:1400,5:1530,6:1670,7:1830,8:2000,9:2200,'Repeat':2600},
+ 'EEA (40 ms)':{0:1981,1:1124,2:1197,3:1275,4:1358,5:1446,6:1540,7:1640,8:1747,9:1860,'Repeat':2400} };
+const SELCAL16={A:312.6,B:346.7,C:384.6,D:426.6,E:473.2,F:524.8,G:582.1,H:645.7,J:716.1,K:794.3,L:881.0,M:977.2,P:1083.9,Q:1202.3,R:1333.5,S:1479.1};
+const ALE_HFN={ '160m':[1996.0],'80m':[3596.0],'60m':[5357.0],'40m':[7102.0,7185.5],'30m':[10145.5],'20m':[14109.0],
+ '17m':[18106.0],'15m':[21096.0],'12m':[24926.0],'10m':[28146.0],'6m':[50140.0],'2m':[144140.0],'70cm':[432140.0] };
+let toolsDone=false;
+function renderTools(){
+  $('#mmsi-go').onclick=()=>{ const r=mmsiDecode($('#mmsi-in').value); const o=$('#mmsi-out'); o.style.display='';
+    o.innerHTML = r.valid ? `<div class="k">${r.mmsi}</div><div class="small" style="margin-top:4px">Category: <b>${r.category}</b><br>MID: <b>${r.mid}</b> · Country: <b>${esc(r.country)}</b></div>`
+                          : `<div class="small bad">${esc(r.error)}</div>`; };
+  if(toolsDone) return; toolsDone=true;
+  // selcall table: rows = digit/label, cols = systems
+  const sys=Object.keys(SELCALL); const labels=[0,1,2,3,4,5,6,7,8,9,'Repeat'];
+  let h='<thead><tr><th>Digit</th>'+sys.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>';
+  labels.forEach(d=>{ h+=`<tr><td class="mono">${d}</td>`+sys.map(s=>`<td class="mono">${SELCALL[s][d]}</td>`).join('')+'</tr>'; });
+  h+='</tbody>'; $('#selcall-tbl').innerHTML=h;
+  // aero SELCAL note row appended
+  $('#selcall-tbl').insertAdjacentHTML('afterend','<p class="note">Aeronautical SELCAL (ARINC, 16 tones A–S, no I/N/O), dual-tone pairs ~1 s: '+Object.entries(SELCAL16).map(([k,v])=>k+'='+v).join(', ')+' Hz.</p>');
+  // ALE table
+  let a='<thead><tr><th>Band</th><th>Channels (USB, kHz)</th><th>MHz</th></tr></thead><tbody>';
+  Object.entries(ALE_HFN).forEach(([b,ch])=>{ a+=`<tr><td>${b}</td><td class="mono">${ch.map(f=>f.toFixed(1)).join(', ')}</td><td class="mono">${ch.map(f=>(f/1000).toFixed(4)).join(', ')}</td></tr>`; });
+  a+='</tbody>'; $('#ale-tbl').innerHTML=a;
+}
+
+// ---------- theme ----------
+$('#theme-btn').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const n=cur==='light'?'':'light';
+  if(n) document.documentElement.setAttribute('data-theme',n); else document.documentElement.removeAttribute('data-theme'); LS.set('e-theme',n); };
+if(LS.get('e-theme','')) document.documentElement.setAttribute('data-theme','light');
+
+// ---------- settings ----------
+$('#my-call').value=LS.get('e-mycall',''); $('#my-grid').value=LS.get('e-mygrid','');
+$('#set-rigctld').value=LS.get('e-rigctld','127.0.0.1:4532'); $('#set-wsjt').value=LS.get('e-wsjt','2237'); $('#set-rigdrift').value=LS.get('e-rigdrift','0');
+$('#save-settings').onclick=()=>{ LS.set('e-mycall',$('#my-call').value.trim().toUpperCase()); LS.set('e-mygrid',$('#my-grid').value.trim().toUpperCase());
+  LS.set('e-rigctld',$('#set-rigctld').value.trim()); LS.set('e-wsjt',$('#set-wsjt').value.trim()); LS.set('e-rigdrift',$('#set-rigdrift').value.trim()||'0'); $('#set-msg').textContent='Saved ✓'; setTimeout(()=>$('#set-msg').textContent='',1500); };
+
+// ---------- new entry ----------
+function utcNow(){ return new Date().toISOString().slice(0,19).replace('T',' '); }
+$('#now-btn').onclick=()=>$('#f-utc').value=utcNow();
+$('#f-utc').value=utcNow();
+function updDxb(){ const d=dxOf($('#f-grid').value); $('#f-dxb').textContent = d?`distance / bearing: ${d.km} km · ${d.brg}° ${compass(d.brg)}`:'distance / bearing: —'; }
+$('#f-grid').addEventListener('input',updDxb);
+$('#f-band').addEventListener('change',()=>{ if(!$('#f-freq').value){ const h=BANDHZ[$('#f-band').value]; if(h&&h!=='14') $('#f-freq').value=h; } });
+function runProp(){
+  const fMHz=bandFreqMHz($('#f-band').value)||parseFloat($('#f-freq').value)||null;
+  const duct=ductAnalysis({sst:num('f-sst'),tair:num('f-temp'),rh:num('f-hum'),p:num('f-baro')});
+  const dop=classifyDoppler(num('f-offset'), fMHz);
+  const fB=braggHz(fMHz);
+  const out=$('#prop-out'); let h='';
+  if(fB!=null) h+=`<div class="k">Sea Bragg Doppler @ ${fMHz} MHz</div><div class="v" style="font-size:18px">±${fB.toFixed(2)} Hz</div>`;
+  if(duct){ const col=duct.like==='High'?'var(--ok)':duct.like==='Moderate'?'var(--accent2)':'var(--muted)';
+    h+=`<div style="margin-top:8px" class="small">Air−sea ΔT <b>${duct.astd}°C</b> · humidity deficit <b>${duct.dq} g/kg</b> · M-grad <b>${duct.dMdh}</b>/m`+
+       `<br>Over-water ducting: <b style="color:${col}">${duct.like}</b> (${duct.mech})`+(duct.edh?` · ~${duct.edh} m evap duct`:'')+
+       (duct.like!=='Low'?` — VHF/UHF enhancement likely`:'')+`</div>`; }
+  if(dop){ const col=dop.sea?'var(--ok)':'var(--muted)';
+    h+=`<div style="margin-top:8px" class="small">Offset after rig-drift (${LS.get('e-rigdrift','0')} Hz) = <b>${dop.resid} Hz</b> vs Bragg ±${dop.fB} → `+
+       `<b style="color:${col}">${dop.sea?'SEA DOPPLER (matches Bragg)':'likely rig drift / not sea'}</b></div>`; }
+  if(!h){ h='<span class="small muted">Enter SST, air temp, humidity (and band/offset) then analyse.</span>'; }
+  out.innerHTML=h; out.style.display='';
+  return {duct,dop,fB};
+}
+$('#calc-prop').onclick=runProp;
+$('#save-entry').onclick=()=>{
+  const call=$('#f-call').value.trim().toUpperCase(); if(!call){ $('#save-msg').textContent='Need a callsign'; return; }
+  const grid=$('#f-grid').value.trim().toUpperCase(); const d=dxOf(grid);
+  const prop=runProp();
+  LOG.unshift({ utc:$('#f-utc').value.trim()||utcNow(), band:$('#f-band').value, mode:$('#f-mode').value, call, grid,
+    km:d?d.km:'', brg:d?d.brg:'', snr:$('#f-snr').value.trim(), freq:$('#f-freq').value.trim(), drift:$('#f-drift').value.trim(),
+    integ:$('#f-integ').value.trim(), ant:$('#f-ant').value.trim(), wind:$('#f-wind').value.trim(), baro:$('#f-baro').value.trim(),
+    rain:$('#f-rain').value.trim(), hum:$('#f-hum').value.trim(), temp:$('#f-temp').value.trim(), sst:$('#f-sst').value.trim(),
+    offset:$('#f-offset').value.trim(), notes:$('#f-notes').value.trim(),
+    duct: prop.duct?prop.duct.like:'', edh: prop.duct?prop.duct.edh:'', astd: prop.duct?prop.duct.astd:'',
+    braggfb: prop.fB?prop.fB.toFixed(2):'', doppler: prop.dop?(prop.dop.sea?'sea':'rig'):'' });
+  saveLog(); ['f-call','f-grid','f-snr','f-drift','f-offset','f-notes'].forEach(id=>$('#'+id).value=''); updDxb();
+  $('#f-utc').value=utcNow(); $('#save-msg').textContent='Logged ✓'; setTimeout(()=>$('#save-msg').textContent='',1500);
+};
+
+// ---------- import WSJT-X ----------
+// Matches both Band-Activity ("HHMMSS -15 0.2 1575 ~ CQ K1ABC FN42")
+// and ALL.txt ("YYMMDD_HHMMSS 144.174 Rx FT8 -21 0.1 809 CQ VP8ABC IO91")
+function parseDecodes(text, band){
+  const out=[]; const gridRe=/\b([A-R]{2}\d{2}([a-x]{2})?)\b/;
+  text.split(/\r?\n/).forEach(line=>{
+    const l=line.trim(); if(!l) return;
+    const nums=l.match(/-?\d+\.?\d*/g); if(!nums) return;
+    // SNR = first integer in [-30,30]; message = tail after the frequency offset
+    let snr='', dt='', df='', freq='', mode='';
+    const m=l.match(/\b(FT8|FT4|WSPR|FST4W|Q65|JT65|MSK144|JT9)\b/i); if(m) mode=m[1].toUpperCase();
+    const fM=l.match(/\b(\d{2,3}\.\d{3})\b/); if(fM) freq=fM[1];
+    const snrM=l.match(/\s(-?\d{1,2})\s+(-?\d+\.\d+)\s+(\d{1,4})\s/); // SNR dT DF
+    if(snrM){ snr=snrM[1]; dt=snrM[2]; df=snrM[3]; }
+    else { const s=nums.find(n=>Math.abs(+n)<=30 && Number.isInteger(+n)); if(s!==undefined) snr=s; }
+    // callsign + grid from the message text
+    const msg=l.replace(/^.*?(CQ|DE|QRZ)?\s*/,'');
+    let call='', grid='';
+    const g=l.match(gridRe); if(g) grid=g[1];
+    const callM=l.match(/\b([A-Z0-9]{1,3}\d[A-Z0-9]{0,3}[A-Z])\b/g);
+    if(callM){ call=callM.find(c=>c!=='CQ'&&!/^\d/.test(c))||callM[callM.length-1]||''; }
+    if(!call && !grid) return;
+    const d=dxOf(grid);
+    out.push({ utc:utcNow().slice(0,10)+' '+(l.match(/\b(\d{6})\b/)?l.match(/\b(\d{6})\b/)[1].replace(/(\d\d)(\d\d)(\d\d)/,'$1:$2:$3'):utcNow().slice(11)),
+      band, mode:mode||'FT8', call, grid, km:d?d.km:'', brg:d?d.brg:'', snr, freq, drift:df, integ:'', ant:'',wind:'',baro:'',rain:'',hum:'',temp:'', notes:'imported' });
+  });
+  return out;
+}
+$('#imp-run').onclick=()=>{ const add=parseDecodes($('#imp-text').value,$('#imp-band').value);
+  if(!add.length){ $('#imp-msg').textContent='No decodes recognised'; return; }
+  LOG=add.concat(LOG); saveLog(); $('#imp-msg').textContent=`Added ${add.length} ✓`; $('#imp-text').value=''; };
+
+// ---------- log table + export ----------
+function filtered(){ const b=$('#flt-band').value,m=$('#flt-mode').value;
+  return LOG.filter(e=>(!b||e.band===b)&&(!m||e.mode===m)); }
+function renderLog(){ const tb=$('#log-table tbody'); const rows=filtered();
+  tb.innerHTML = rows.length? rows.map((e,i)=>`<tr>
+    <td class="mono">${esc(e.utc)}</td><td>${esc(e.band.split(' ')[0])}</td><td>${esc(e.mode)}</td>
+    <td class="mono">${esc(e.call)}</td><td class="mono">${esc(e.grid)}</td><td class="mono">${esc(e.km)}</td>
+    <td class="mono">${e.brg!==''?esc(e.brg)+'°':''}</td><td class="mono">${esc(e.snr)}</td><td class="mono">${esc(e.freq)}</td>
+    <td><button class="btn sm" data-del="${LOG.indexOf(e)}">✕</button></td></tr>`).join('')
+    : '<tr><td colspan="10" class="muted small">No entries. Add one under “New entry” or import WSJT-X decodes.</td></tr>';
+  tb.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ LOG.splice(+b.dataset.del,1); saveLog(); renderLog(); }); }
+$('#flt-band').onchange=renderLog; $('#flt-mode').onchange=renderLog;
+$('#clear-log').onclick=()=>{ if(confirm('Delete all log entries?')){ LOG=[]; saveLog(); renderLog(); } };
+
+function download(name,text,type){ const b=new Blob([text],{type:type||'text/plain'}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),2000); }
+function adifBand(b){ const h=+BANDHZ[b]; return h>=1296?'23cm':h>=902?'33cm':h>=432?'70cm':h>=222?'1.25m':h>=144?'2m':h>=50?'6m':'20m'; }
+function exportADIF(){ const rows=filtered(); let s='Einstein ADIF export\n<ADIF_VER:5>3.1.4<PROGRAMID:8>Einstein<EOH>\n';
+  const f=(n,v)=>{ v=String(v==null?'':v); return v?`<${n}:${v.length}>${v}`:''; };
+  rows.forEach(e=>{ const [d,t]=(e.utc||'').split(' '); const qd=(d||'').replace(/-/g,''); const qt=(t||'').replace(/:/g,'').slice(0,6);
+    const cmt=[e.integ&&('int '+e.integ+'s'),e.drift&&('drift '+e.drift+'Hz'),e.offset&&('offset '+e.offset+'Hz'),e.doppler&&('dop:'+e.doppler),e.braggfb&&('Bragg '+e.braggfb+'Hz'),e.ant&&('ant '+e.ant+'°'),e.wind&&('wind '+e.wind),e.baro&&('baro '+e.baro),e.sst&&('SST '+e.sst+'C'),e.astd!==''&&e.astd!=null&&('dT '+e.astd),e.duct&&('duct '+e.duct+(e.edh?'/'+e.edh+'m':'')),e.rain&&('rain '+e.rain),e.hum&&('hum '+e.hum+'%'),e.temp&&('temp '+e.temp+'C'),e.notes].filter(Boolean).join('; ');
+    s+=[f('CALL',e.call),f('GRIDSQUARE',e.grid),f('MODE',e.mode),f('BAND',adifBand(e.band)),f('FREQ',e.freq),f('QSO_DATE',qd),f('TIME_ON',qt),f('APP_EINSTEIN_SNR',e.snr),f('DISTANCE',e.km),f('ANT_AZ',e.brg),f('COMMENT',cmt),'<EOR>'].join('')+'\n'; });
+  download('einstein_log.adi',s,'text/plain'); }
+function exportCSV(){ const rows=filtered(); const cols=['utc','band','mode','call','grid','km','brg','snr','freq','drift','offset','integ','ant','wind','baro','rain','hum','temp','sst','astd','braggfb','doppler','duct','edh','notes'];
+  const esc2=v=>{ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const s=cols.join(',')+'\n'+rows.map(e=>cols.map(c=>esc2(e[c])).join(',')).join('\n'); download('einstein_log.csv',s,'text/csv'); }
+$('#exp-adif').onclick=exportADIF; $('#exp-csv').onclick=exportCSV;
+
+// ---------- dashboard ----------
+function renderDash(){ const n=LOG.length; $('#s-total').textContent=n;
+  const dx=LOG.filter(e=>e.km!=='').map(e=>+e.km); $('#s-dx').textContent=dx.length?Math.max(...dx).toLocaleString():'—';
+  const snrs=LOG.filter(e=>e.snr!=='').map(e=>+e.snr).filter(x=>!isNaN(x)); $('#s-snr').textContent=snrs.length?Math.min(...snrs)+' dB':'—';
+  const bands=new Set(LOG.map(e=>e.band)); const modes=new Set(LOG.map(e=>e.mode)); const grids=new Set(LOG.filter(e=>e.grid).map(e=>e.grid.slice(0,4)));
+  $('#s-bands').textContent=bands.size; $('#s-modes').textContent=modes.size; $('#s-grids').textContent=grids.size;
+  $('#by-band').innerHTML=barChart(countBy('band')); $('#by-mode').innerHTML=barChart(countBy('mode'));
+  const rec=LOG.slice(0,8); $('#recent tbody').innerHTML = rec.length? rec.map(e=>`<tr><td class="mono">${esc(e.utc)}</td><td>${esc(e.mode)}</td><td class="mono">${esc(e.call)}</td><td class="mono">${esc(e.grid)}</td><td class="mono">${esc(e.snr)}</td><td class="mono">${e.km!==''?e.km+'km':''}</td></tr>`).join('') : '<tr><td class="muted small">Nothing logged yet.</td></tr>'; }
+function countBy(k){ const m={}; LOG.forEach(e=>{ const v=(e[k]||'?').split(' ')[0]; m[v]=(m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); }
+function barChart(entries){ if(!entries.length) return '<p class="muted small">No entries yet.</p>'; const max=Math.max(...entries.map(e=>e[1]));
+  return entries.map(([k,v])=>`<div style="margin:6px 0"><div class="small" style="display:flex;justify-content:space-between"><span>${esc(k)}</span><span class="muted">${v}</span></div><div class="bar"><i style="width:${Math.round(100*v/max)}%"></i></div></div>`).join(''); }
+
+renderDash();
+</script>
+</body>
+</html>
