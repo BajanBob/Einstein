@@ -1,11 +1,6 @@
+__pycache__/
+*.pyc
 node_modules/
+dist/
 android/
 ios/
-dist/
-dist-win/
-out/
-*.apk
-*.exe
-*.AppImage
-*.deb
-.DS_Store
