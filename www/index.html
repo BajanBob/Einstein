@@ -85,6 +85,7 @@
   <button data-tab="ssp">SSP</button>
   <button data-tab="ai">AI</button>
   <button data-tab="email">Email</button>
+  <button data-tab="chat">Chat</button>
   <button data-tab="tools">Tools</button>
   <button data-tab="settings">Settings</button>
 </div>
@@ -251,6 +252,24 @@
   </div>
 </section>
 
+<!-- ===== CHAT ===== -->
+<section id="t-chat" style="display:none">
+  <div class="card">
+    <h2>Text chat <span style="font-weight:400;font-size:12px;color:#8aa">— clear text over the Einstein modem</span></h2>
+    <p class="small muted">Live sequenced chat with per-message ACK. Clear text on amateur bands. Set your callsign and the peer's; on-air delivery is carried by the station engine (<code>rf/einstein_chat.py</code>) — this composes/logs the conversation and the exact frames.</p>
+    <div class="grid2">
+      <div><label>My callsign</label><input id="ch-me" type="text" placeholder="8P5AB" autocapitalize="characters"></div>
+      <div><label>Peer callsign</label><input id="ch-peer" type="text" placeholder="8P5DG" autocapitalize="characters"></div>
+    </div>
+    <div id="ch-log" style="margin-top:10px;min-height:120px;max-height:300px;overflow:auto;background:#060b10;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--body);font-size:14px"></div>
+    <div class="row" style="margin-top:8px;gap:8px">
+      <input id="ch-text" type="text" placeholder="Message…" style="flex:1">
+      <button class="btn go sm" id="ch-send">Send</button>
+    </div>
+    <p class="note" id="ch-frame" style="margin-top:8px;word-break:break-all"></p>
+  </div>
+</section>
+
 <!-- ===== TOOLS ===== -->
 <section id="t-tools" style="display:none">
   <div class="card">
@@ -269,6 +288,32 @@
     <h2>International ALE channels (HFLINK HFN, USB kHz)</h2>
     <p class="small muted">De-facto international amateur ALE calling channels. Region-dependent — verify your band plan and licence.</p>
     <div class="scroll"><table id="ale-tbl"></table></div>
+  </div>
+  <div class="card">
+    <h2>RF Modes Library</h2>
+    <p class="small muted">Known transmission modes with their parameters. Full reference: <code>rf/MODES.md</code> · <code>rf/modes_library.py</code> · MATLAB in <code>rf/mode_waveforms.m</code>.</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="ml-cat"></select>
+      <span class="small muted" id="ml-count"></span>
+    </div>
+    <div class="scroll" style="margin-top:8px"><table id="ml-tbl"></table></div>
+  </div>
+  <div class="card">
+    <h2>Ultrasonic link <span style="font-weight:400;font-size:12px;color:#8aa">— data-over-sound (open)</span></h2>
+    <p class="small muted">Short-range, RF-free transfer over near-ultrasound (18–22 kHz) using this device's speaker/mic. Open operation; acoustic, a few metres. Engine: <code>rf/einstein_ultravoice.py</code>.</p>
+    <div class="row" style="gap:8px"><input id="us-text" type="text" placeholder="Text to send over sound…" style="flex:1"><button class="btn go sm" id="us-tx">Transmit</button></div>
+    <div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" id="us-rx">Listen</button><span class="small muted" id="us-state" style="align-self:center">idle</span></div>
+    <p class="note" id="us-out" style="margin-top:8px"></p>
+  </div>
+  <div class="card">
+    <h2>VoIP ↔ RF gateway <span style="font-weight:400;font-size:12px;color:#8aa">— RoIP cross-patch</span></h2>
+    <p class="small muted">Bridge a phone/VoIP endpoint to a radio: a handshake sets up the link, then VoIP audio keys PTT and radio audio returns to the phone. Full bridge runs on the desktop engine (<code>rf/einstein_roip.py</code>) with a radio + PTT; this panel sets up and shows the link.</p>
+    <div class="grid2">
+      <div><label>Gateway ID</label><input id="rp-me" type="text" placeholder="GW1"></div>
+      <div><label>Peer ID</label><input id="rp-peer" type="text" placeholder="PHONE"></div>
+    </div>
+    <div class="row" style="gap:8px;margin-top:8px"><button class="btn go sm" id="rp-call">Set up link</button><button class="btn sm" id="rp-bye">End</button><span class="small muted" id="rp-state" style="align-self:center">idle</span></div>
+    <p class="note" id="rp-hs" style="margin-top:8px;word-break:break-all"></p>
   </div>
 </section>
 
@@ -542,7 +587,7 @@ fillSel($('#flt-band'),BANDS,'All bands'); fillSel($('#flt-mode'),MODES,'All mod
 
 // ---------- tabs ----------
 $$('#tabs button').forEach(b=>b.onclick=()=>{ $$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  ['dash','new','log','analyzer','recorder','repeater','import','ssp','ai','email','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
+  ['dash','new','log','analyzer','recorder','repeater','import','ssp','ai','email','chat','tools','settings'].forEach(t=>$('#t-'+t).style.display = t===b.dataset.tab?'':'none');
   if(b.dataset.tab==='dash') renderDash(); if(b.dataset.tab==='log') renderLog(); if(b.dataset.tab==='tools') renderTools();
   if(b.dataset.tab==='email') renderEmail(); if(b.dataset.tab==='ssp') renderSSP(); if(b.dataset.tab==='ai') renderAI();
   if(b.dataset.tab!=='analyzer' && anRun) stopAnalyzer(); if(b.dataset.tab!=='repeater' && rpRun) stopRepeater(); });
