@@ -116,7 +116,8 @@ jobs:
           tar -czf out/einstein-sdr-rf-tools.tar.gz rf/ SPECIFICATIONS.md
           echo "numpy" > out/requirements.txt
           echo "scikit-learn  # for neural_receiver_compare.py" >> out/requirements.txt
-          echo "sounddevice   # optional, for live soundcard TX/RX" >> out/requirements.txt
+          echo "sounddevice   # standalone station engine: live soundcard capture/playback (einstein_audio.py)" >> out/requirements.txt
+          echo "pyserial      # standalone station engine: serial/CI-V/Yaesu CAT PTT (einstein_ptt.py)" >> out/requirements.txt
       - uses: actions/upload-artifact@v4
         with: { name: Einstein-SDR-RF-tools, path: out/* }
       - name: Publish

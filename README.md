@@ -39,6 +39,16 @@ what is software vs what needs radio hardware.
   Compressed, CRC-protected, selective-ARQ. Compose in-app; modulate/decode with the
   `rf/` tools. Full spec, measured numbers and recommended innovations in `rf/MODEM.md`.
   *Not VARA-compatible, not a Winlink drop-in — an open, honest, Einstein-native modem.*
+- **Radio / CAT & standalone station engine** — Einstein stands on its own on a PC/Pi:
+  a native **soundcard audio pipe** (capture rig audio for the analyzer, SSP and the
+  drift/sea-Doppler classifier; play modem/beacon audio to TX), native **PTT/CAT**
+  (VOX, serial RTS/DTR, CM108 GPIO, Hamlib rigctld, Icom CI-V, Yaesu CAT), the
+  **AFSK1200 / 300-baud / Robust 8-FSK codecs**, and a **per-model radio preset** table
+  for popular 2020-era rigs (IC-9100, IC-705/9700/7100/7300/7610, FT-991A/710/FTDX10,
+  TS-590/890, Xiegu, HTs…). The app's **Settings → Radio / CAT** panel auto-fills the
+  CI-V address, baud and PTT from the model you pick. This is **additive** to the
+  in-app WebAudio analyzer, which still works on every platform. Run it with
+  `python3 rf/einstein_station.py`. Spec: `rf/RADIOS.md`.
 
 ## The hybrid vision (roadmap)
 See `ROADMAP.md`. The headline: a dual-band **VHF/HF** station assistant that
@@ -49,9 +59,12 @@ WSJT-X UDP, PSK Reporter, PTT). Decoders for the established modes stay with WSJ
 Einstein is the connective analysis/logging/control layer plus the original Pigeon-line
 waveforms.
 
-## Radios (Hamlib CAT)
-IC-9100 / IC-7300 / IC-7610 / IC-705 / IC-905, FT-991A / FT-710 / FTdx10, FTM-500D /
-FTM-300D, TS-590SG / TS-890S and most 2020-era HF/VHF rigs, via `rigctld`.
+## Radios (native CAT + Hamlib)
+IC-9100 / IC-7300 / IC-7610 / IC-705 / IC-9700 / IC-7100, FT-991A / FT-710 / FTDX10 /
+FTDX101, FTM-500D / FTM-300D, TS-590SG / TS-890S, Xiegu X6100 / G90, and HTs via AIOC —
+with tested CI-V addresses, CAT baud rates and PTT wiring built in (`rf/einstein_radios.py`,
+and the **Settings → Radio / CAT** panel). Any other radio works via Hamlib `rigctld`.
+Full reference and the standalone station engine: `rf/RADIOS.md`.
 
 
 ## Platforms & downloads (release v1.0.0)

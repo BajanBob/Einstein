@@ -420,15 +420,23 @@
     <p class="note">Everything is stored on this device only. A valid grid unlocks the SSP and AI tabs.</p>
   </div>
   <div class="card">
-    <h2>Planned: live station I/O (desktop)</h2>
+    <h2>Radio / CAT <span style="font-weight:400;font-size:12px;color:#8aa">— desktop station engine</span></h2>
+    <p class="small muted">Pick your radio and Einstein auto-fills the CAT/PTT settings — CI-V address, CAT baud, PTT method and rigctld — the same tested values as Tradewind. These drive the native station engine (<code>rf/einstein_station.py</code>) for keying, tuning and the modems on the Windows/Linux/Pi build.</p>
     <div class="grid2">
+      <div><label>Radio / interface</label><select id="set-radio"></select></div>
+      <div><label>Recommended Einstein modem</label><input id="set-radiomodem" type="text" placeholder="OFDM-PRO" readonly></div>
+      <div><label>PTT method</label><input id="set-ptt" type="text" placeholder="VOX / RTS / CIV / YAESU_CAT"></div>
+      <div><label>CAT / PTT serial port</label><input id="set-catport" type="text" placeholder="COM5 or /dev/ttyUSB0"></div>
+      <div><label>CI-V address (Icom)</label><input id="set-civ" type="text" placeholder="7C"></div>
+      <div><label>CAT baud</label><input id="set-catbaud" type="text" placeholder="9600"></div>
+      <div><label>Audio device (rig in/out)</label><input id="set-audio" type="text" placeholder="USB Audio CODEC"></div>
       <div><label>rigctld host:port (Hamlib)</label><input id="set-rigctld" type="text" placeholder="127.0.0.1:4532"></div>
       <div><label>WSJT-X UDP port</label><input id="set-wsjt" type="text" placeholder="2237"></div>
+      <div><label>Rig reference drift (Hz) — GPSDO/OCXO offset</label><input id="set-rigdrift" type="text" placeholder="0.0"></div>
     </div>
-    <label>Rig reference drift (Hz) — your known oscillator offset (GPSDO/OCXO calibration)</label>
-    <input id="set-rigdrift" type="text" placeholder="0.0">
-    <p class="note">The drift classifier subtracts this from the measured offset before testing for the sea Bragg Doppler — so a disciplined reference lets Einstein tell <b>sea Doppler from rig drift</b>.</p>
-    <p class="note">Saved for the desktop helper that will talk to your IC-9100 / FT-991A / FT-710 / SDRs via Hamlib and capture WSJT-X decodes live. Not active in this build.</p>
+    <p class="note" id="radio-note"></p>
+    <p class="note">The drift classifier subtracts your reference drift from the measured offset before testing for the sea Bragg Doppler — so a disciplined reference lets Einstein tell <b>sea Doppler from rig drift</b>.</p>
+    <p class="note"><b>Audio for analysis works now, in-app:</b> the <b>Analyzer</b> and <b>Recorder</b> tabs use your browser's audio input (getUserMedia) — feed the rig's USB-codec / line-in into the computer and watch the band live on any platform. <b>Native soundcard TX/PTT/CAT</b> (the previously-missing pipe) runs on the desktop build via these saved settings: <code>python3 rf/einstein_station.py --radio &lt;id&gt; --info</code> to check wiring, <code>--analyze 3</code> to pipe rig audio straight into SSP/drift analysis, <code>--tune</code>, <code>--tx-test</code>, <code>--rx</code> for on-air use.</p>
   </div>
   <div class="card">
     <h2>About</h2>
@@ -918,6 +926,47 @@ setFace(LS.get('e-theme','dark')||'dark');
 $('#my-call').value=LS.get('e-mycall',''); $('#my-grid').value=LS.get('e-mygrid','');
 $('#my-ip').value=LS.get('e-myip',''); $('#my-port').value=LS.get('e-myport','8773');
 $('#set-rigctld').value=LS.get('e-rigctld','127.0.0.1:4532'); $('#set-wsjt').value=LS.get('e-wsjt','2237'); $('#set-rigdrift').value=LS.get('e-rigdrift','0');
+
+// Radio / CAT presets — mirrors rf/einstein_radios.py (tested values from Tradewind).
+const RADIOS=[
+  {id:'generic_vox',label:'Generic soundcard + VOX (SignaLink, Easy Digi)',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'AFSK1200',note:'Interface keys on audio (VOX). Set TX audio so the radio deviates ~3 kHz (FM) or ALC just moves (SSB).'},
+  {id:'signalink',label:'Tigertronics SignaLink USB',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'AFSK1200',note:'SignaLink keys the radio (VOX). DLY ~9 o’clock, TX knob low. Use the jumper/cable for your model.'},
+  {id:'digirig',label:'Digirig Mobile',ptt:'RTS',civ:'',baud:'',audio:'USB PnP Sound Device',modem:'AFSK1200',note:'Audio “USB PnP Sound Device”. PTT = Serial RTS on the Digirig serial port.'},
+  {id:'cm108',label:'CM108/CM119 USB fob (GPIO PTT)',ptt:'CM108',civ:'',baud:'',audio:'USB Audio Device',modem:'AFSK1200',note:'Linux only: PTT device /dev/hidrawN (GPIO3). Grant access via a udev rule.'},
+  {id:'rigctld',label:'Any radio via Hamlib rigctld (CAT PTT + tune)',ptt:'RIGCTLD',civ:'',baud:'',audio:'USB Audio CODEC',rigctld:'127.0.0.1:4532',modem:'OFDM-PRO',note:'Start rigctld first (rigctld -m <model> -r <port> -s <baud>). Einstein keys and tunes through Hamlib.'},
+  {id:'ic9100',label:'Icom IC-9100 (HF/VHF/UHF, USB audio + CI-V)',ptt:'CIV',civ:'7C',baud:'9600',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'One USB cable = audio + CI-V. DATA MOD = USB, CI-V address 7C, baud 9600. USB-D on HF, FM-D on 2m/70cm. Close other CAT software first.'},
+  {id:'ic705',label:'Icom IC-705 (HF/VHF/UHF, USB audio + CI-V)',ptt:'CIV',civ:'A4',baud:'9600',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'CI-V address A4. DATA MOD = USB; USB-D on HF, FM-D on 2m/70cm.'},
+  {id:'ic9700',label:'Icom IC-9700 (VHF/UHF/23cm, USB audio + CI-V)',ptt:'CIV',civ:'A2',baud:'9600',audio:'USB Audio CODEC',modem:'OFDM-PROV',note:'CI-V address A2. DATA MOD = USB, FM-D. On FM 2m/70cm you can run the 9 kbps Pro VHF modem.'},
+  {id:'ic7100',label:'Icom IC-7100 (HF/VHF/UHF, USB audio + CI-V)',ptt:'CIV',civ:'88',baud:'9600',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'CI-V address 88. DATA MOD = USB; USB-D on HF, FM-D on 2m/70cm.'},
+  {id:'ic7300',label:'Icom IC-7300 (HF/6m, USB audio + CI-V)',ptt:'CIV',civ:'94',baud:'19200',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'CI-V USB baud 19200 (or Auto), address 94. DATA MOD = USB, USB-D.'},
+  {id:'ic7610',label:'Icom IC-7610 (HF/6m, USB audio + CI-V)',ptt:'CIV',civ:'98',baud:'19200',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'CI-V address 98, baud 19200. DATA MOD = USB, USB-D.'},
+  {id:'ft991a',label:'Yaesu FT-991A (HF/VHF/UHF, USB audio)',ptt:'YAESU_CAT',civ:'',baud:'38400',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'Yaesu CAT on the “Standard” COM port at the radio’s CAT baud (menu 031, e.g. 38400). DATA-FM on 2m/70cm, DATA-U on HF.'},
+  {id:'ft710',label:'Yaesu FT-710 / FTDX10 / FTDX101 (HF, USB audio)',ptt:'YAESU_CAT',civ:'',baud:'38400',audio:'USB Audio CODEC',modem:'OFDM-PRO',note:'Yaesu CAT on the “Standard” COM port. Select USB data audio, use DATA-U.'},
+  {id:'ft2980',label:'Yaesu FT-2980R (2m FM, mic+speaker via interface)',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'AFSK1200',note:'No data jack/CAT. SignaLink (VOX) or Digirig (RTS) on mic + ext-speaker jacks. Keep TX audio low, Low/Mid power.'},
+  {id:'yaesu_ftm',label:'Yaesu FTM-500D / FTM-300D / FTM-200 (DATA jack)',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'AFSK1200',note:'Soundcard interface on the rear DATA jack, data-jack speed 1200 bps, radio’s own APRS off.'},
+  {id:'ts590',label:'Kenwood TS-590SG / TS-590S / TS-890S (HF, USB audio)',ptt:'RIGCTLD',civ:'',baud:'115200',audio:'USB Audio CODEC',rigctld:'127.0.0.1:4532',modem:'OFDM-PRO',note:'One USB cable = audio + CAT. Run rigctld for PTT+tune; set data input to USB audio.'},
+  {id:'tmv71',label:'Kenwood TM-V71A / TM-V71E (2m/70cm, DATA jack)',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'AFSK1200',note:'6-pin mini-DIN DATA jack with a SignaLink (VOX) or Digirig (RTS). Set data band, 1200 bps.'},
+  {id:'x6100',label:'Xiegu X6100 (HF/6m, USB audio)',ptt:'RIGCTLD',civ:'',baud:'',audio:'USB Audio CODEC',rigctld:'127.0.0.1:4532',modem:'OFDM-STD',note:'Audio + CAT over USB (firmware dependent). Run rigctld with the X6100 model.'},
+  {id:'xiegu_g90',label:'Xiegu G90 / G106 (HF, via DE-19 / Digirig)',ptt:'VOX',civ:'',baud:'',audio:'USB Audio CODEC',modem:'OFDM-STD',note:'No built-in sound card — use DE-19 or Digirig. PTT: VOX, RTS, or rigctld via CI-V.'},
+  {id:'aioc_ht',label:'Radtel/Quansheng/Baofeng HTs (AIOC cable)',ptt:'DTR',civ:'',baud:'',audio:'All-In-One-Cable',modem:'AFSK1200',note:'AIOC cable: audio “All-In-One-Cable”, PTT = DTR. Radio VOX off, TX audio low, low power.'}
+];
+function fillRadio(id,quiet){ const r=RADIOS.find(x=>x.id===id)||RADIOS[0];
+  $('#set-ptt').value=r.ptt; $('#set-civ').value=r.civ||''; $('#set-catbaud').value=r.baud||'';
+  $('#set-audio').value=r.audio||''; $('#set-radiomodem').value=r.modem||'';
+  if(r.rigctld) $('#set-rigctld').value=r.rigctld;
+  $('#radio-note').innerHTML='<b>'+r.label+':</b> '+r.note;
+  if(!quiet) LS.set('e-radio',id); }
+(function(){ const sel=$('#set-radio'); if(!sel) return;
+  RADIOS.forEach(r=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.label; sel.appendChild(o); });
+  sel.value=LS.get('e-radio','ic9100');
+  // restore any user-edited CAT fields, else fill from the preset
+  const savedPtt=LS.get('e-ptt',null);
+  fillRadio(sel.value,true);
+  if(savedPtt!==null){ $('#set-ptt').value=savedPtt; $('#set-civ').value=LS.get('e-civ',$('#set-civ').value);
+    $('#set-catbaud').value=LS.get('e-catbaud',$('#set-catbaud').value); $('#set-audio').value=LS.get('e-audio',$('#set-audio').value); }
+  $('#set-catport').value=LS.get('e-catport','');
+  sel.onchange=()=>fillRadio(sel.value);
+})();
 function setupReqMark(){ let ok=false; try{SSP.grid2ll(($('#my-grid').value||'').trim());ok=true;}catch(e){}
   $('#setup-req').textContent = ok?'' : '· grid square required'; }
 setupReqMark(); $('#my-grid').addEventListener('input',setupReqMark);
@@ -927,6 +976,10 @@ $('#save-settings').onclick=()=>{ const gv=$('#my-grid').value.trim().toUpperCas
   LS.set('e-mycall',$('#my-call').value.trim().toUpperCase()); LS.set('e-mygrid',gv);
   LS.set('e-myip',$('#my-ip').value.trim()); LS.set('e-myport',$('#my-port').value.trim()||'8773');
   LS.set('e-rigctld',$('#set-rigctld').value.trim()); LS.set('e-wsjt',$('#set-wsjt').value.trim()); LS.set('e-rigdrift',$('#set-rigdrift').value.trim()||'0');
+  if($('#set-radio')) LS.set('e-radio',$('#set-radio').value);
+  LS.set('e-ptt',$('#set-ptt').value.trim()); LS.set('e-civ',$('#set-civ').value.trim());
+  LS.set('e-catbaud',$('#set-catbaud').value.trim()); LS.set('e-catport',$('#set-catport').value.trim());
+  LS.set('e-audio',$('#set-audio').value.trim());
   $('#set-msg').textContent='Saved ✓'; setupReqMark(); setTimeout(()=>$('#set-msg').textContent='',1500); };
 
 // ---------- new entry ----------
